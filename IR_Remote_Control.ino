@@ -19,7 +19,7 @@ void setup() {
 
 void loop() {
 
-  //myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
+  //line tracking and turn 90 degree
   if((analogRead(R_S) > 100)&&(analogRead(L_S) > 100)){myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);}
 
   else if(analogRead(L_S) < 100){
@@ -37,4 +37,28 @@ void loop() {
     myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
   }
 
+    //remote control to go forward/back/left/right
+  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+  switch(IRrecv_button) 
+  {
+    case 1: // Forward
+      myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
+      break; 
+    case 2: // Backward
+      myMotors.DeviceDriverSet_Motor_control(false, 70, false, 70, true);
+      break;
+    case 3: // Left
+      myMotors.DeviceDriverSet_Motor_control(true, 70, false, 70, true);
+      break;  
+    case 4: // Right
+      myMotors.DeviceDriverSet_Motor_control(false, 70, true, 70, true);
+      break;  
+    case 5: // Stop
+      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
+      break;  
+    
+    default: 
+      Serial.println("Nothing"); 
+      break; 
+    }
 }
