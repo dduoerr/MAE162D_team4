@@ -4,6 +4,7 @@ int turn1dis; // where to make first turn (encoder distance value) for picking u
 bool turn1dir; // direction for the first turn: left or right
 int turn2dis; //where to make the second turn for dropping
 int turnCount90 = 0; //count of turn 90 deg
+bool haveItem = false; //if already grab the item
 
 Functions：
 void lineTracking(){
@@ -27,20 +28,20 @@ void turn90(bool dir){
 
 
 void grabItem(){
-	slider servo move;
-	lifting servo move;
+	lifting servo move;//up
+	slider servo move;//forward
 	gripper servo move;
         using while loop, while (servo angle < ?), read pressure sensor, if reading < ?, break(stop closing);
-	lifting servo move;
-    slider servo move;
+    slider servo move;//backward
+	lifting servo move;//down
+	haveItem = true;
 }
 
 void dropItem(){
-	slider servo move;
-	lifting servo move;
+	slider servo move;//forward
 	gripper servo move(release);
-    lifting servo move;
-    slider servo move;
+    slider servo move;//backward
+	haveItem = false;
 }
 
 void uTurn(){
@@ -51,6 +52,16 @@ void uTurn(){
     myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true); //go straight
 }
 
+void endStop(){ //when blackline gone at the end, stop the robot
+	if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){
+		myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+		delay(100000); //long enough to power off manually 
+	}
+}
+
+
+
+
 void setup(){
   // put your setup code here, to run once:
 	Serial.begin(9600); 
@@ -58,6 +69,7 @@ void setup(){
 	IRremote.DeviceDriverSet_IRrecv_Init();
 
 	switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis
+	// put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
 	case1:
 	case2:
 	case3:
@@ -72,20 +84,70 @@ void loop() {
   // put your main code here, to run repeatedly: 
 	get IR sensor data, encoder data, ultrasonic data every loop
     
-    if (encoder in a range of turn1dis){//for first turn and picking up
-        if (turnCount90 = 1){ //robot allready make the turn, and go straight to item
+    if (encoder in a range of turn1dis){//for first 90turn and picking up
+        if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
+			lineTracking();
             if (ultrasonic < ~0){ //robot is approaching the wall
                 myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
                 delay(1000); // wait to be stable
                 grabItem();
-                
-                
-        lineTracking();
-        turn90(turn1dir);
-        
-    
-	
-
+				uTurn();
+			}
+		}
+		else{
+			lineTracking();
+			turn90(turn1dir);
+		}
+	}
+	else if(encoder in a range of two 45deg turn){
+		//not sure whether lineTracking is enough, otherwise, add a turn45() function
+		lineTracking();
+	}
+	else if(encoder in the range of 90deg turn after rough terrain){
+		if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
+			lineTracking();
+		else{
+			lineTracking();
+			turn90(false); //turn left
+		}
+	else if(encoder in a range of turn2dis){//for 90turn and dropping off
+		if (itemNum == 1){ // item 1 is the special case, can go straight up to dropping point without turning
+			if (turnCount90 == 2 && haveItem){ //only turn 2 times before
+				lineTracking();
+				if (ultrasonic < ~0){ //robot is approaching the wall
+					myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+					delay(1000); // wait to be stable
+					dropItem();
+					uTurn();
+				}
+			}
+			else{
+				lineTracking();
+				turn90(true);
+			}
+		else{ //item 2,3,4,5,6
+			if (turnCount90 == 4 && haveItem){ //turn 4 times before
+				lineTracking();
+				if (ultrasonic < ~0){ //robot is approaching the wall
+					myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+					delay(1000); // wait to be stable
+					dropItem();
+					uTurn();
+				}
+			}
+			else{
+				lineTracking();
+				turn90(true);
+			}
+		}
+	}
+	else if(encoder in the range of stop at the end){
+		lineTracking();
+		endStop();
+	}
+	else{ // go straight
+		lineTracking();
+	}
 }
 
 
@@ -93,10 +155,10 @@ void loop() {
 functions for car: 
 1. remote control for pick up which item
 2. when to turn and turn left/right to get item
-	pick up item, back up a little bit, make a U-turn (bc IR sensor at the front)
+	pick up item, make a U-turn (bc IR sensor at the front)
 3. line following and turn to go through door and rough terrain
 4. when to turn right and drop the item
-	drop the item, back up a little bit, make a U-turn (bc IR sensor at the front)
+	drop the item, make a U-turn (bc IR sensor at the front)
 5. stop at the end (black line ends?)
 	
 
