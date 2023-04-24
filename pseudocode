@@ -1,0 +1,182 @@
+Variables:
+int itemNum; // which item to pick up
+int turn1dis; // where to make first turn (encoder distance value) for picking up
+bool turn1dir; // direction for the first turn: left or right
+int turn2dis; //where to make the second turn for dropping
+int turnCount90 = 0; //count of turn 90 deg
+
+Functions：
+void lineTracking(){
+	if((analogRead(R_S) > 100)&&(analogRead(L_S) > 100)){myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);}
+
+	else if(analogRead(L_S) < 100){myMotors.DeviceDriverSet_Motor_control(true, 50, true, 100, true);}
+
+	else if(analogRead(R_S) < 100){myMotors.DeviceDriverSet_Motor_control(true, 100, true, 50, true);}
+}
+
+void turn90(bool dir){
+    if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){ // seeing white
+        myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
+        delay(500);
+        myMotors.DeviceDriverSet_Motor_control(dir, 70, !dir, 70, true);
+        delay(800);
+        myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
+        turnCount90 ++;
+    }
+}
+
+
+void grabItem(){
+	slider servo move;
+	lifting servo move;
+	gripper servo move;
+        using while loop, while (servo angle < ?), read pressure sensor, if reading < ?, break(stop closing);
+	lifting servo move;
+    slider servo move;
+}
+
+void dropItem(){
+	slider servo move;
+	lifting servo move;
+	gripper servo move(release);
+    lifting servo move;
+    slider servo move;
+}
+
+void uTurn(){
+    myMotors.DeviceDriverSet_Motor_control(true, 70, false, 70, true); //two wheels in different directions
+    delay(1600); //time to turn
+    myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+    delay(1000); // wait to be stable
+    myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true); //go straight
+}
+
+void setup(){
+  // put your setup code here, to run once:
+	Serial.begin(9600); 
+	//enable IR communication first 
+	IRremote.DeviceDriverSet_IRrecv_Init();
+
+	switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis
+	case1:
+	case2:
+	case3:
+	case4:
+	case5:
+	case6:
+	
+	}
+}
+
+void loop() {
+  // put your main code here, to run repeatedly: 
+	get IR sensor data, encoder data, ultrasonic data every loop
+    
+    if (encoder in a range of turn1dis){//for first turn and picking up
+        if (turnCount90 = 1){ //robot allready make the turn, and go straight to item
+            if (ultrasonic < ~0){ //robot is approaching the wall
+                myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+                delay(1000); // wait to be stable
+                grabItem();
+                
+                
+        lineTracking();
+        turn90(turn1dir);
+        
+    
+	
+
+}
+
+
+
+functions for car: 
+1. remote control for pick up which item
+2. when to turn and turn left/right to get item
+	pick up item, back up a little bit, make a U-turn (bc IR sensor at the front)
+3. line following and turn to go through door and rough terrain
+4. when to turn right and drop the item
+	drop the item, back up a little bit, make a U-turn (bc IR sensor at the front)
+5. stop at the end (black line ends?)
+	
+
+
+useful resources:
+
+//ultrasonic code
+int trigPin = 9;    // TRIG pin
+int echoPin = 8;    // ECHO pin
+
+float duration_us, distance_cm;
+
+void setup() {
+  // begin serial port
+  Serial.begin (9600);
+
+  // configure the trigger pin to output mode
+  pinMode(trigPin, OUTPUT);
+  // configure the echo pin to input mode
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  // generate 10-microsecond pulse to TRIG pin
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // measure duration of pulse from ECHO pin
+  duration_us = pulseIn(echoPin, HIGH);
+
+  // calculate the distance
+  distance_cm = 0.017 * duration_us;
+
+  // print the value to Serial Monitor
+  Serial.print("distance: ");
+  Serial.print(distance_cm);
+  Serial.println(" cm");
+
+  delay(500);
+}
+
+
+//servo code
+// Include the servo library:
+#include <Servo.h>
+
+// Create a new servo object:
+Servo myservo;
+
+// Define the servo pin:
+#define servoPin 9
+
+// Create a variable to store the servo position:
+int angle = 0;
+
+void setup() {
+  // Attach the Servo variable to a pin:
+  myservo.attach(servoPin);
+}
+
+void loop() {
+  // Tell the servo to go to a particular angle:
+  myservo.write(90);
+  delay(1000);
+  myservo.write(180);
+  delay(1000);
+  myservo.write(0);
+  delay(1000);
+
+  // Sweep from 0 to 180 degrees:
+  for (angle = 0; angle <= 180; angle += 1) {
+    myservo.write(angle);
+    delay(15);
+  }
+
+  // And back from 180 to 0 degrees:
+  for (angle = 180; angle >= 0; angle -= 1) {
+    myservo.write(angle);
+    delay(30);
+  }
+  delay(1000);
+}
