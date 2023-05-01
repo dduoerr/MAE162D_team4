@@ -1,3 +1,17 @@
+Components:
+Servo1 for slider
+Servo2 for lifting system
+Servo3 for gripper
+Ultrasonic1 at the front
+Ultrasonic2 on the left to detect moving obstacle
+IR sensor (L M R) at the bottom for line tracking
+IR sensor on the right to count the number of black lines
+IR remote control for remote
+Encoders for DC motors
+
+
+
+
 Variables:
 int itemNum; // which item to pick up
 int turn1dis; // where to make first turn (encoder distance value) for picking up
