@@ -22,7 +22,7 @@ int lineLimitPickup = 0;
 int lineLimitDropOff = 0;
 boolean lineDetected = false;
 
-enum {pickingUp, moving90, moving45, navigateObstacles,dropppingOff };
+enum {pickingUp, moving90, moving45, navigateObstacles,dropppingOff, endStop };
 unsigned char robotState = pickingUp;
 
 
@@ -46,11 +46,23 @@ void lineTracking(int slow, int medium, int high){
   else if(analogRead(R_S) < 100){
     myMotors.DeviceDriverSet_Motor_control(true, high, true, slow, true);
   }
+
 }
 
-void turn90(bool dir){
+void turn45(bool dir){ //only ever turns 45 degrees in the left direction, but left for robustness
+
+    myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
+    delay(500);
+    myMotors.DeviceDriverSet_Motor_control(dir, 70, !dir, 70, true);
+    delay(400);
+    myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
+
+
+}
+
+void turn90(bool dir){ //UPDATE FOR NO WHITE CHECK
     
-    //turn 90 degrees, where dir = True is turn right
+    //turn 90 degrees, where dir = True is turn left
     if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){ // seeing white
         myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);
         delay(500);
@@ -137,9 +149,11 @@ void loop() {
 //  ultrasonicVal = getUltrasonic();
 //  encoderVal = digitalRead(encoder);
 //  turnIRVal = digitalRead(Turn_S);
+
+
     switch (robotState): {
 
-      case(pickingUp):
+      case(pickingUp): //from start to picking up item
         if(lineDetected == False && turnIRVal == 1) //detect first intersection
         {
           lineCount++;
@@ -158,14 +172,36 @@ void loop() {
                     myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
                     delay(1000); // wait to be stable
                     grabItem();
+                    uTurn();
                     lineCount = 0;
-                    robotState = moving;
+                    robotState = moving90;
                 }
         }
+        else{
+           delay(100); //give time to either pass intersection or turn
+        }
 
-      case(moving):
+      case(moving90): //from after picking up item to completing 90 degree turn
+        lineTracking();
+        if(turnIRVal == 1) { //not sure if 1 is black or white
 
-      case(navigateObstacles):
+          turn90(dir); //DETERMINE DIRECTION BASED ON ITEM NUMBER
+          robotState = moving45;
+        }
+
+      case(moving45): //from straight path to completing 45 degree turn
+        lineTracking();
+        if(turnIRVal == 1) {
+          turn45(True);
+          delay(1000);
+          lineTracking(50,70,100);
+          delay(1000);
+          turn45(True);
+          robotState = navigateObstacles;
+        }
+    
+
+      case(navigateObstacles): //for bumpy road and dynamic obstacle
         
         //use ultrasonic data to 
         
@@ -186,76 +222,59 @@ void loop() {
         
       
       case(droppingOff): 
-        
-        if(haveItem && lineCount == lineLimitDropOff) //reached intersection for dropping off item
-        {
 
           
-        }
+          if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
+            lineTracking();
+          else{
+            lineTracking();
+            turn90(false); //turn left
+          }
 
-        // if (itemNum == 1){ // item 1 is the special case, can go straight up to dropping point without turning
-        //   if (turnCount90 == 2 && haveItem){ //only turn 2 times before
-        //     lineTracking(50, 70, 100);
-        //     if (ultrasonicVal < ~0){ //robot is approaching the wall
-        //       myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-        //       delay(1000); // wait to be stable
-        //       dropItem();
-        //       uTurn();
-        //     }
-        //   }
-        //   else{
-        //       lineTracking(50, 70, 100);
-        //       turn90(true);
-        //   }
-        // else{ //item 2,3,4,5,6
-        //   if (turnCount90 == 4 && haveItem){ //turn 4 times before
-        //     lineTracking(50, 70, 100);
-        //     if (ultrasonic < ~0){ //robot is approaching the wall
-        //       myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-        //       delay(1000); // wait to be stable
-        //       dropItem();
-        //       uTurn();
-        //     }
-        //   }
-        //   else{
-        //     lineTracking(50, 70, 100);
-        //     turn90(true);
-        //   }
-        // }
+          if(itemNum!= 1 && lineCount == lineLimitDropOff) //reached intersection for dropping off item
+          {
+              // if (itemNum == 1){ // item 1 is the special case, can go straight up to dropping point without turning
+                      //   if (turnCount90 == 2 && haveItem){ //only turn 2 times before
+                      //     lineTracking(50, 70, 100);
+                      //     if (ultrasonicVal < ~0){ //robot is approaching the wall
+                      //       myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+                      //       delay(1000); // wait to be stable
+                      //       dropItem();
+                      //       uTurn();
+                      //     }
+                      //   }
+                      //   else{
+                      //       lineTracking(50, 70, 100);
+                      //       turn90(true);
+                      //   }
+                      // else{ //item 2,3,4,5,6
+                      //   if (turnCount90 == 4 && haveItem){ //turn 4 times before
+                      //     lineTracking(50, 70, 100);
+                      //     if (ultrasonic < ~0){ //robot is approaching the wall
+                      //       myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+                      //       delay(1000); // wait to be stable
+                      //       dropItem();
+                      //       uTurn();
+                      //     }
+                      //   }
+                      //   else{
+                      //     lineTracking(50, 70, 100);
+                      //     turn90(true);
+                      //   }
+                      // }
+
+              robotState = endStop;
+            
+          }
+      case(endStop):
+        lineTracking();
+        endStop();
+        
       }
-  
+
+        
 
 
-    
-    if (encoder in a range of turn1dis){//for first 90turn and picking up
-       
-        uTurn();
-      }
-    }
-    else{
-      lineTracking();
-      turn90(turn1dir);
-    }
   }
-  else if(encoder in a range of two 45deg turn){
-    //not sure whether lineTracking is enough, otherwise, add a turn45() function
-    lineTracking();
-  }
-  else if(encoder in the range of 90deg turn after rough terrain){
-    if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
-      lineTracking();
-    else{
-      lineTracking();
-      turn90(false); //turn left
-    }
- // else if(encoder in a range of turn2dis){//for 90turn and dropping off
 
-  }
-  else if(encoder in the range of stop at the end){
-    lineTracking();
-    endStop();
-  }
-  else{ // go straight
-    lineTracking();
-  }
 }
