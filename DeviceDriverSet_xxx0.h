@@ -39,6 +39,12 @@ public:
 #define L_S A2
 #define M_S A1
 #define R_S A0
+// #define Turn_S A3
+
+//ultrasonic pins
+// #define ultrasonic_ping 7 // Trigger Pin of Ultrasonic Sensor
+// #define ultraonisc_echo 6 // Echo Pin of Ultrasonic Sensor
+
 };
 
 /*IRrecv*/

@@ -20,7 +20,7 @@ int turn2dis; //where to make the second turn for dropping
 int turnCount90 = 0; //count of turn 90 deg
 bool haveItem = false; //if already grab the item
 
-Functions：
+//Functions
 void lineTracking(){
 	if((analogRead(R_S) > 100)&&(analogRead(L_S) > 100)){myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true);}
 
