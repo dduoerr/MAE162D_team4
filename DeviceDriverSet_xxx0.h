@@ -45,6 +45,32 @@ public:
 // #define ultrasonic_ping 7 // Trigger Pin of Ultrasonic Sensor
 // #define ultraonisc_echo 6 // Echo Pin of Ultrasonic Sensor
 
+
+//servo for ultrasonic pins (S4)
+// #define ??? ? // servo pin for ultrasonic servo(S4)
+
+//Servo 1 (slider)
+// #define servoSlider ?
+
+//Servo 2 (lifting system)
+// #deine servoLift ?
+
+//Servo 3 (gripper)
+//#define servoGripper ?
+
+// pins for the encoder inputs
+//#define RH_ENCODER_A ?
+//#define RH_ENCODER_B ?
+//#define LH_ENCODER_A ?
+//#define LH_ENCODER_B ?
+
+// pressure sensor
+//#define pressurePin ??
+
+// ir_sensor for number of seeing black line
+//#define ?? ?
+
+
 };
 
 /*IRrecv*/
