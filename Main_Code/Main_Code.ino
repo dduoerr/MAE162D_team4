@@ -1,6 +1,7 @@
 #include <avr/wdt.h>
 #include <stdio.h>
 #include <string.h>
+#include <Servo.h>
 #include "DeviceDriverSet_xxx0.h"
 
 DeviceDriverSet_Motor myMotors; 
@@ -23,7 +24,10 @@ int lineLimitDropOff = 0;
 boolean lineDetected = false;
 
 // Create a new servo object:
-Servo ultrasonic_servo;
+//Servo ultrasonic_servo;
+//Servo slider_servo;
+//Servo lifting_servo;
+//Servo gripper_servo;
 
 enum {pickingUp, moving90, moving45, navigateObstacles,dropppingOff, endStop };
 unsigned char robotState = pickingUp;
@@ -101,12 +105,35 @@ void grabItem(){
   lifting servo move;//down
   haveItem = true;
   */
+  
+  //fill up angle later
+  lifting_servo.write(??);
+  slider_servo.write(??);
+  gripper_servo.write(??);//gripper fully open 
+  for (int angle = ?; angle> = 0; angle-=1){
+    if(analogRead(pressurePin) > 1000){
+      break;
+    }
+    else{
+      gripper_servo.write(angle);
+      delay(15);
+    }
+  } 
+  silder_servo.write(??);
+  lifting_servo.write(??);
+  haveItem = true;
 }
 
 void dropItem(){
+/*
   slider servo move;//forward
   gripper servo move(release);
     slider servo move;//backward
+  haveItem = false;*/
+
+  slider_servo.write(??);
+  gripper_servo.write(??);
+  slider_servo.write(??);
   haveItem = false;
 }
 
@@ -118,7 +145,7 @@ void uTurn(){
     myMotors.DeviceDriverSet_Motor_control(true, 70, true, 70, true); //go straight
 }
 
-void endStop(){ //when blackline gone at the end, stop the robot
+void stopEnd(){ //when blackline gone at the end, stop the robot
   if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){
     myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
     delay(100000); //long enough to power off manually 
@@ -132,7 +159,11 @@ void setup(){
   //enable IR communication first 
   IRremote.DeviceDriverSet_IRrecv_Init();
   ultrasonic_servo.attach(ultrasonicServoPin);
+  slider_servo.attach(servoSlider);
+  lifting_servo.attach(servoLift);
+  gripper_servo.attach(servoGripper);
 
+  
   switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
   // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
   case1:
@@ -217,7 +248,7 @@ void loop() {
         int directions[] = {45, 135};
         for(int idx = 0; i < 2; i++)
         {
-          myservo.write(directions[idx]); //look left then right
+          ultrasonic_servo.write(directions[idx]); //look left then right
 
           //use ultrasonic data to detect if object is not in front of the vehicle;
           delay(15);
@@ -282,7 +313,7 @@ void loop() {
           }
       case(endStop):
         lineTracking(50,70,100);
-        endStop();
+        stopEnd();
         
       }
 
