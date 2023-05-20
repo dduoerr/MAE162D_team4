@@ -47,29 +47,29 @@ public:
 
 
 //servo for ultrasonic pins (S4)
-#define ultrasonicServoPin ? // servo pin for ultrasonic servo(S4)
+#define ultrasonicServoPin 10 // servo pin for ultrasonic servo(S4)
 
 //Servo 1 (slider)
-#define servoSlider ?
+#define servoSlider 44
 
 //Servo 2 (lifting system)
-#define servoLift ?
+#define servoLift 45
 
 //Servo 3 (gripper)
-#define servoGripper ?
+#define servoGripper 11
 
 // pins for the encoder inputs
-#define RH_ENCODER_A ?
-#define RH_ENCODER_B ?
-#define LH_ENCODER_A ?
-#define LH_ENCODER_B ?
+#define RH_ENCODER_A 32
+#define RH_ENCODER_B 33
+#define LH_ENCODER_A 39
+#define LH_ENCODER_B 38
 
 // pressure sensor
-#define pressurePin ??
+#define pressurePin A10
 
 // ir_sensor for number of seeing black line
-#define ir_sensor_L ?
-#define ir_sensor_R ?
+#define ir_sensor_L 26//?
+#define ir_sensor_R 27//?
 
 };
 
