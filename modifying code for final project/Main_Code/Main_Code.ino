@@ -15,7 +15,7 @@ uint8_t IRrecv_button;
 int itemNum; // USED which item to pick up
 int turn1dis; // UNUSED where to make first turn (encoder distance value) for picking up
 
-bool turn1dir; // UNUSED direction for the first turn: left or right
+bool turn1dir; // direction for the first turn: left or right
 int turn2dis; //UNUSED where to make the second turn for dropping
 int turnCount90 = 0; //USED count of turn 90 deg
 bool haveItem = false; //USED if already grab the item
@@ -188,26 +188,38 @@ void setup(){
   // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
   case1:
     itemNum = 1;
+    lineLimitPickup = 1;
+    turn1dir = true;
     myMotors.DeviceDriverSet_Motor_Init();
     break;
   case2:
     itemNum = 2;
+    lineLimitPickup = 2;
+    turn1dir = true;
     myMotors.DeviceDriverSet_Motor_Init();
     break;
   case3:
     itemNum = 3;
+    lineLimitPickup = 3;
+    turn1dir = true;
     myMotors.DeviceDriverSet_Motor_Init();
     break;
   case4:
     itemNum = 4;
+    lineLimitPickup = 1;
+    turn1dir = false;
     myMotors.DeviceDriverSet_Motor_Init();
     break;
   case5:
     itemNum = 5;
+    lineLimitPickup = 2;
+    turn1dir = false;
     myMotors.DeviceDriverSet_Motor_Init();
     break;
   case6:
     itemNum = 6;
+    lineLimitPickup = 3;
+    turn1dir = false;
     myMotors.DeviceDriverSet_Motor_Init();
     break;
   default:
@@ -242,6 +254,7 @@ void loop() {
         if(lineCount == lineLimitPickup) //reached intersection for picking up item
         {
            if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
+
                 lineTracking(50, 70, 100);
                 if (ultrasonicVal < ~0){ //robot is approaching the wall
                     myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
@@ -253,7 +266,7 @@ void loop() {
                     robotState = moving90;
                 }
           else {
-            turn90(True); //change boolean based on juice box position
+            turn90(turn1dir); //change boolean based on juice box position
             turnCount90++;
           }
         }
@@ -307,7 +320,7 @@ void loop() {
         }
         
         //go slow in bumpy region
-        lineTracking(30, 40, 50);
+        // lineTracking(30, 40, 50);
 
         if(lineDetected == False && turnIRVal == 1) { //detect first intersection, transition to drop off mode
           robotState = droppingOff;
@@ -346,7 +359,7 @@ void loop() {
             }
             else{
                 lineTracking(50, 70, 100);
-                turn90(true); //always turn right
+                turn90(false); //always turn right
             }
             
           }
