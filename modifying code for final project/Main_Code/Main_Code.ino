@@ -109,8 +109,10 @@ int getUltrasonic(){
 
 void grabItem(){
   //fill up angle later
-  lifting_servo.write(??);
-  slider_servo.write(??);
+  lifting_servo.write(??); // 0 and 180 mean 2 directions.
+  delay(?);
+  slider_servo.write(??); 
+  delay(?);
   gripper_servo.write(??);//gripper fully open 
   for (int angle = ?; angle> = 0; angle-=1){
     if(analogRead(pressurePin) > 1000){
@@ -122,14 +124,18 @@ void grabItem(){
     }
   } 
   silder_servo.write(??);
+  delay(?);
   lifting_servo.write(??);
+  delay(?)
   haveItem = true;
 }
 
 void dropItem(){
   slider_servo.write(??);
+  delay(?);
   gripper_servo.write(??);
   slider_servo.write(??);
+  delay(?);
   haveItem = false;
 }
 
