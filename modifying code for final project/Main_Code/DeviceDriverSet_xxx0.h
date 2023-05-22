@@ -68,8 +68,8 @@ public:
 #define pressurePin A10
 
 // ir_sensor for number of seeing black line
-#define ir_sensor_L 26//?
-#define ir_sensor_R 27//?
+#define ir_sensor_L 26
+#define ir_sensor_R 27
 
 };
 

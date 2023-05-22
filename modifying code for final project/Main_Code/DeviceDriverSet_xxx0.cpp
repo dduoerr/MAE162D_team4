@@ -16,8 +16,7 @@ void DeviceDriverSet_Motor::DeviceDriverSet_Motor_Init(void)
   digitalWrite(RH_ENCODER_B, LOW);
   digitalWrite(LH_ENCODER_A, LOW);
   digitalWrite(LH_ENCODER_B, LOW);
-  attachInterrupt(0, readEncoder_R, CHANGE);
-  attachInterrupt(0, readEncoder_L, CHANGE);
+
 }
 
 
