@@ -40,7 +40,7 @@ long Lcounts = 0;
 long ultrasonicVal, encoderVal;
 int turnIRVal;
 
-enum {pickingUp, moving90, moving45, navigateObstacles,dropppingOff, endStop };
+enum {startUp, pickingUp, moving90, moving45, navigateObstacles,dropppingOff, endStop };
 unsigned char robotState = pickingUp;
 
 
@@ -187,35 +187,7 @@ void setup(){
 //  gripper_servo.attach(servoGripper);
 
   
-  switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
-  // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
-  case 1:
-    itemNum = 1;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case 2:
-    itemNum = 2;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case 3:
-    itemNum = 3;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case 4:
-    itemNum = 4;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case 5:
-    itemNum = 5;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case 6:
-    itemNum = 6;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  default:
-    break;
-  }
+
 }
 
 
