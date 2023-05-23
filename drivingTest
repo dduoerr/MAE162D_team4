@@ -192,9 +192,67 @@ void setup(){
 
 
 void loop(){
-  lineTracking(50, 70, 100);
-  encoderVal = (Rcounts+Lcounts)/2;
-  Serial.print(encoderVal);
+  switch (robotState){
+    case(startUp):
+        IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+        switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
+        // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
+        case 1:
+          itemNum = 1;
+          lineLimitPickup = 1;
+          lineLimitDropOff = 0;
+          robotState = pickingUp;
+          turn1dir = true;
+          
+          break;
+        case 2:
+          itemNum = 2;
+          lineLimitPickup = 2;
+          lineLimitDropOff = 1;
+          robotState = pickingUp;
+          turn1dir = true;
+
+          break;
+        case 3:
+          itemNum = 3;
+          lineLimitPickup = 3;
+          lineLimitDropOff = 2;
+          robotState = pickingUp;
+          turn1dir = true;
+
+          break;
+        case 4:
+          itemNum = 4;
+          lineLimitPickup = 1;
+          lineLimitDropOff = 3;
+          robotState = pickingUp;
+          turn1dir = false;
+
+          break;
+        case 5:
+          itemNum = 5;
+          lineLimitPickup = 2;
+          lineLimitDropOff = 4;
+          robotState = pickingUp;
+          turn1dir = false;
+
+          break;
+        case 6:
+          itemNum = 6;
+          lineLimitPickup = 3;
+          lineLimitDropOff = 5;
+          robotState = pickingUp;
+          turn1dir = false;
+          break;
+        default:
+          break;
+        }
+    case(pickingUp):
+      lineTracking(50, 70, 100);
+      encoderVal = (Rcounts+Lcounts)/2;
+      Serial.println(encoderVal);
+
+      
 }
 //void loop() {
 //  // put your main code here, to run repeatedly:

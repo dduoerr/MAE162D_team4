@@ -40,8 +40,8 @@ long Lcounts = 0;
 long ultrasonicVal, encoderVal;
 int turnIRVal;
 
-enum {pickingUp, moving90, moving45, navigateObstacles,dropppingOff, endStop };
-unsigned char robotState = pickingUp;
+enum {startUp, pickingUp, moving90, moving45, navigateObstacles,dropppingOff, endStop };
+unsigned char robotState = startUp;
 
 
 //moving, turning45, pickingup, dropping off
@@ -188,49 +188,8 @@ void setup(){
   slider_servo.attach(servoSlider);
   lifting_servo.attach(servoLift);
   gripper_servo.attach(servoGripper);
+  robotState = startUp;
 
-  
-  switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
-  // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
-  case1:
-    itemNum = 1;
-    lineLimitPickup = 1;
-    turn1dir = true;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case2:
-    itemNum = 2;
-    lineLimitPickup = 2;
-    turn1dir = true;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case3:
-    itemNum = 3;
-    lineLimitPickup = 3;
-    turn1dir = true;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case4:
-    itemNum = 4;
-    lineLimitPickup = 1;
-    turn1dir = false;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case5:
-    itemNum = 5;
-    lineLimitPickup = 2;
-    turn1dir = false;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  case6:
-    itemNum = 6;
-    lineLimitPickup = 3;
-    turn1dir = false;
-    myMotors.DeviceDriverSet_Motor_Init();
-    break;
-  default:
-    break;
-  }
 }
 
 void loop() {
@@ -243,10 +202,161 @@ void loop() {
 
 
 
-    switch (robotState){
+  switch (robotState){
+    case(startUp):
+        IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+        switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
+        // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
+        case 1:
+          itemNum = 1;
+          lineLimitPickup = 1;
+          lineLimitDropOff = 0;
+          robotState = pickingUp;
+          turn1dir = true;
+          
+          break;
+        case 2:
+          itemNum = 2;
+          lineLimitPickup = 2;
+          lineLimitDropOff = 1;
+          robotState = pickingUp;
+          turn1dir = true;
 
-      case(pickingUp): //from start to picking up item
+          break;
+        case 3:
+          itemNum = 3;
+          lineLimitPickup = 3;
+          lineLimitDropOff = 2;
+          robotState = pickingUp;
+          turn1dir = true;
+
+          break;
+        case 4:
+          itemNum = 4;
+          lineLimitPickup = 1;
+          lineLimitDropOff = 3;
+          robotState = pickingUp;
+          turn1dir = false;
+
+          break;
+        case 5:
+          itemNum = 5;
+          lineLimitPickup = 2;
+          lineLimitDropOff = 4;
+          robotState = pickingUp;
+          turn1dir = false;
+
+          break;
+        case 6:
+          itemNum = 6;
+          lineLimitPickup = 3;
+          lineLimitDropOff = 5;
+          robotState = pickingUp;
+          turn1dir = false;
+          break;
+        default:
+          break;
+        }
+
+    case(pickingUp): //from start to picking up item
+      lineTracking(50, 70, 100);
+      if(lineDetected == False && turnIRVal == 1 && lineCount < lineLimitPickup) //detect first intersection
+      {
+        lineCount++;
+        lineDetected = True;
+      }
+      else if (lineDetected == True && turnIRVal == 0 && lineCount < lineLimitPickup) //no longer seeing intersections
+      {
+        lineDetected = False;
+      }
+
+      if(lineCount == lineLimitPickup) //reached intersection for picking up item
+      {
+        if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
+
+          lineTracking(50, 70, 100);
+          if (ultrasonicVal < ~0){ //robot is approaching the wall
+              myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+              delay(1000); // wait to be stable
+              grabItem();
+              uTurn();
+              lineCount = 0;
+              turnCount90 = 0;
+              robotState = moving90;
+          }
+        else {
+          turn90(turn1dir); //change boolean based on juice box position
+          turnCount90++;
+        }
+      }
+      else{
+          delay(500); //give time to either pass intersection or turn. needs be tuned
+      }
+
+    case(moving90): //from after picking up item to completing 90 degree turn
+      lineTracking(50, 70, 100);
+      if(turnIRVal == 1) { //not sure if 1 is black or white
+
+        turn90(turn1dir); //DETERMINE DIRECTION BASED ON ITEM NUMBER
+        robotState = moving45;
+      }
+
+    case(moving45): //from straight path to completing 45 degree turn
         lineTracking(50, 70, 100);
+      if(turnIRVal == 1) {
+        turn45(True);
+        delay(1000);
+        lineTracking(50,70,100);
+        delay(1000);
+        turn45(True);
+        robotState = navigateObstacles;
+      }
+  
+
+    case(navigateObstacles): //for bumpy road and dynamic obstacle
+      
+      lineTracking(50, 70, 100); 
+      int directions[] = {45, 135};
+      for(int idx = 0; i < 2; i++)
+      {
+        ultrasonic_servo.write(directions[idx]); //look left then right
+
+        //use ultrasonic data to detect if object is not in front of the vehicle;
+        delay(15);
+        ultrasonicValPrev = getUltrasonic();
+        delay(50);
+        ultrasonicValNow = getUltrasonic();
+        rateOfChange = ultrasonicValNow - ultrasonicValPrev;
+        if(ultrasonicValNow < 10 && rateOfChange < 0) { //actually detecting obstacle and not the wall/something else
+          //obstacles is moving away, so speed past the object
+          lineTracking(50, 70, 100);
+        }
+        else {//dynamic obstacle is getting closer. slow down
+          lineTracking(20, 30, 40); 
+        }
+        delay(100);
+
+      }
+      
+      //go slow in bumpy region
+      // lineTracking(30, 40, 50);
+
+      if(lineDetected == False && turnIRVal == 1) { //detect first intersection, transition to drop off mode
+        robotState = droppingOff;
+        lineCount = 0;
+      }
+      
+    
+    case(droppingOff): 
+
+        
+        if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
+          lineTracking(50,70,100);
+        else{
+          lineTracking(50,70,100);
+          turn90(false); //turn left
+        }
+
         if(lineDetected == False && turnIRVal == 1 && lineCount < lineLimitPickup) //detect first intersection
         {
           lineCount++;
@@ -257,123 +367,26 @@ void loop() {
           lineDetected = False;
         }
 
-        if(lineCount == lineLimitPickup) //reached intersection for picking up item
+        if(lineCount == lineLimitDropOff) //reached intersection for dropping off item
         {
-           if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
-
-                lineTracking(50, 70, 100);
-                if (ultrasonicVal < ~0){ //robot is approaching the wall
-                    myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-                    delay(1000); // wait to be stable
-                    grabItem();
-                    uTurn();
-                    lineCount = 0;
-                    turnCount90 = 0;
-                    robotState = moving90;
-                }
-          else {
-            turn90(turn1dir); //change boolean based on juice box position
-            turnCount90++;
+          if (ultrasonicVal < ~0){ //robot is approaching the wall
+            myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+            delay(1000); // wait to be stable
+            dropItem();
+            uTurn();
+            robotState = endStop;
           }
-        }
-        else{
-           delay(300); //give time to either pass intersection or turn
-        }
-
-      case(moving90): //from after picking up item to completing 90 degree turn
-        lineTracking(50, 70, 100);
-        if(turnIRVal == 1) { //not sure if 1 is black or white
-
-          turn90(dir); //DETERMINE DIRECTION BASED ON ITEM NUMBER
-          robotState = moving45;
-        }
-
-      case(moving45): //from straight path to completing 45 degree turn
-         lineTracking(50, 70, 100);
-        if(turnIRVal == 1) {
-          turn45(True);
-          delay(1000);
-          lineTracking(50,70,100);
-          delay(1000);
-          turn45(True);
-          robotState = navigateObstacles;
-        }
-    
-
-      case(navigateObstacles): //for bumpy road and dynamic obstacle
-        
-        lineTracking(50, 70, 100); 
-        int directions[] = {45, 135};
-        for(int idx = 0; i < 2; i++)
-        {
-          ultrasonic_servo.write(directions[idx]); //look left then right
-
-          //use ultrasonic data to detect if object is not in front of the vehicle;
-          delay(15);
-          ultrasonicValPrev = getUltrasonic();
-          delay(50);
-          ultrasonicValNow = getUltrasonic();
-          rateOfChange = ultrasonicValNow - ultrasonicValPrev;
-          if(ultrasonicValNow < 10 && rateOfChange < 0) { //actually detecting obstacle and not the wall/something else
-            //obstacles is moving away, so speed past the object
-            lineTracking(50, 70, 100);
-          }
-          else {//dynamic obstacle is getting closer. slow down
-            lineTracking(20, 30, 40); 
-          }
-          delay(100);
-
-        }
-        
-        //go slow in bumpy region
-        // lineTracking(30, 40, 50);
-
-        if(lineDetected == False && turnIRVal == 1) { //detect first intersection, transition to drop off mode
-          robotState = droppingOff;
-          lineCount = 0;
-        }
-        
-      
-      case(droppingOff): 
-
-          
-          if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
-            lineTracking(50,70,100);
           else{
-            lineTracking(50,70,100);
-            turn90(false); //turn left
+              lineTracking(50, 70, 100);
+              turn90(false); //always turn right
           }
-
-          if(lineDetected == False && turnIRVal == 1 && lineCount < lineLimitPickup) //detect first intersection
-          {
-            lineCount++;
-            lineDetected = True;
-          }
-          else if (lineDetected == True && turnIRVal == 0 && lineCount < lineLimitPickup) //no longer seeing intersections
-          {
-            lineDetected = False;
-          }
-
-          if(lineCount == lineLimitDropOff) //reached intersection for dropping off item
-          {
-            if (ultrasonicVal < ~0){ //robot is approaching the wall
-              myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-              delay(1000); // wait to be stable
-              dropItem();
-              uTurn();
-              robotState = endStop;
-            }
-            else{
-                lineTracking(50, 70, 100);
-                turn90(false); //always turn right
-            }
-            
-          }
-      case(endStop):
-        lineTracking(50,70,100);
-        stopEnd();
-        
-      }
+          
+        }
+    case(endStop):
+      lineTracking(50,70,100);
+      stopEnd();
+      
+    }
 
         
 
