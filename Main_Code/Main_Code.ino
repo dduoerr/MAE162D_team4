@@ -8,9 +8,9 @@
 #include "DeviceDriverSet_xxx0.h"
 
 // pins for the encoder inputs
-//#define RH_ENCODER_A 32  // ENCODER BROKEN
-//#define RH_ENCODER_B 33
-#define LH_ENCODER_A 18
+#define RH_ENCODER_A 18  // ENCODER BROKEN
+#define RH_ENCODER_B 39
+#define LH_ENCODER_A 19
 #define LH_ENCODER_B 38
 
 DeviceDriverSet_Motor myMotors; 
@@ -34,12 +34,12 @@ boolean lineDetected = false;
 
 //// Create a new servo object:
 //Servo ultrasonic_servo;
-//Servo slider_servo;
-//Servo lifting_servo;
+Servo slider_servo;
+Servo lifting_servo;
 //Servo gripper_servo;
 
 // COUNTS FOR ENCODER COUNTS both right and left
-//long Rcounts = 0;
+long Rcounts = 0;
 long Lcounts = 0;
 
 //  //Initialize all variable with data type appears in the void loop
@@ -154,17 +154,17 @@ void stopEnd(){ //when blackline gone at the end, stop the robot
   }
 }
 
-//void readEncoder_R() //this function is triggered by the encoder CHANGE, and increments the encoder counter  //ENCODER BROKEN!
-//{ 
-//  if(digitalRead(RH_ENCODER_B) == digitalRead(RH_ENCODER_A) )
-//  {
-//    Rcounts = Rcounts-1; //you may need to redefine positive and negative directions
-//  }
-//  else
-//  {
-//    Rcounts = Rcounts+1;
-//  }
-//}
+void readEncoder_R() //this function is triggered by the encoder CHANGE, and increments the encoder counter  //ENCODER BROKEN!
+{ 
+  if(digitalRead(RH_ENCODER_B) == digitalRead(RH_ENCODER_A) )
+  {
+    Rcounts = Rcounts-1; //you may need to redefine positive and negative directions
+  }
+  else
+  {
+    Rcounts = Rcounts+1;
+  }
+}
 
 void readEncoder_L() //this function is triggered by the encoder CHANGE, and increments the encoder counter
 { 
@@ -185,21 +185,21 @@ void setup(){
   IRremote.DeviceDriverSet_IRrecv_Init();
   myMotors.DeviceDriverSet_Motor_Init();
   //ENCODER 
-//  pinMode(RH_ENCODER_A,INPUT);//initialze encoder pins
-//  pinMode(RH_ENCODER_B,INPUT);
+  pinMode(RH_ENCODER_A,INPUT);//initialze encoder pins
+  pinMode(RH_ENCODER_B,INPUT);
   pinMode(LH_ENCODER_A,INPUT);
   pinMode(LH_ENCODER_B,INPUT);
-//  digitalWrite(RH_ENCODER_A, LOW);//initialize pin states
-//  digitalWrite(RH_ENCODER_B, LOW);
+  digitalWrite(RH_ENCODER_A, LOW);//initialize pin states
+  digitalWrite(RH_ENCODER_B, LOW);
   digitalWrite(LH_ENCODER_A, LOW);
   digitalWrite(LH_ENCODER_B, LOW);
-//  attachInterrupt(digitalPinToInterrupt(RH_ENCODER_A), readEncoder_R, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(RH_ENCODER_A), readEncoder_R, CHANGE);
   attachInterrupt(digitalPinToInterrupt(LH_ENCODER_A), readEncoder_L, CHANGE);
   //enable IR communication first 
 
 //  ultrasonic_servo.attach(ultrasonicServoPin);
-//  slider_servo.attach(servoSlider);
-//  lifting_servo.attach(servoLift);
+  slider_servo.attach(servoSlider);
+  lifting_servo.attach(servoLift);
 //  gripper_servo.attach(servoGripper);
 
   
@@ -207,21 +207,28 @@ void setup(){
 
 
 void loop(){
-  //IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
-   lineTracking(50, 70, 100);
-//    Serial.print(digitalRead(LH_ENCODER_A));
-//    Serial.print(digitalRead(LH_ENCODER_B));
-//    Serial.print(digitalRead(39));
-//    Serial.print(digitalRead(32));
-//    Serial.print(digitalRead(33));
-//  Serial.print("REncoder: ");
-Serial.print(digitalRead(LH_ENCODER_B));
-  Serial.print(" AB ");
-Serial.print(digitalRead(LH_ENCODER_A));
-  Serial.print(" cou ");
-  Serial.print(Lcounts);
-  Serial.print(" ");
+  lifting_servo.write(0);
   delay(500);
+  lifting_servo.write(90);
+  delay(3000);
+
+
+
+  
+  //IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+//   lineTracking(50, 70, 100);
+////    Serial.print(digitalRead(LH_ENCODER_A));
+////    Serial.print(digitalRead(LH_ENCODER_B));
+////    Serial.print(digitalRead(39));
+////    Serial.print(digitalRead(32));
+////    Serial.print(digitalRead(33));
+//  Serial.print("lEncoder: ");
+//  Serial.print(Lcounts);
+//    Serial.print(" ");
+//  Serial.print("rEncoder: ");
+//  Serial.print(Rcounts);
+//  Serial.print(" ");
+//  delay(500);
 //   Serial.print("LEncoder: ");
 //  Serial.print(Rcounts);
 //  encoderVal = (Rcounts+Lcounts)/2;
