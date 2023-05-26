@@ -46,7 +46,7 @@ long Lcounts = 0;
 long ultrasonicVal, encoderVal;
 int turnIRVal_L,turnIRVal_R;
 
-enum {startUp, pickingUp, moving90, moving45, navigateObstacles,droppingOff, endStop };
+enum {startUp, pickingUp, moving90, moving45, navigateObstacles,droppingOff, endStop, remoteControl };
 unsigned char robotState = startUp;
 
 
@@ -226,7 +226,17 @@ void loop(){
   Serial.println(turnIRVal_R);
   delay(500);
   
+  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+  if(IRrecv_button > 6) // emergency stop button
+  {
+    robotState = remoteControl;
+  }
+  
   switch (robotState){
+    case(remoteControl):
+
+    
+      break;
     case(startUp):
         IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
         switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
@@ -281,7 +291,7 @@ void loop(){
         default:
           break;
         }
-    break;
+      break;
     case(pickingUp): //from start to picking up item
       lineTracking(130, 150, 170);
       if(lineDetected == false && turnIRVal_L == 1 && lineCount < lineLimitPickup) //detect first intersection
@@ -298,24 +308,22 @@ void loop(){
       {
         if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
 
-          lineTracking(130, 150, 170);
-          delay(3000);
-//          if (ultrasonicVal < ~0){ //robot is approaching the wall
-          myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-          delay(1000); // wait to be stable
-          grabItem();
-          uTurn();
-          lineCount = 0;
-          turnCount90 = 0;
-          robotState = moving90;
+          lineTracking(50, 70, 100);
+          if (ultrasonicVal < 20){ //robot is x distance away from wall
+              myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+              delay(1000); // wait to be stable
+              grabItem();
+              uTurn();
+              lineCount = 0;
+              turnCount90 = 0;
+              robotState = moving90;
         }
         else {
           turn90(turn1dir); //change boolean based on juice box position
-//          turnCount90=1;
         }
       }
       else{
-          delay(1000); //give time to either pass intersection or turn. needs be tuned
+          delay(1300); //give time to either pass intersection or turn.
       }
       break;
     case(moving90): //from after picking up item to completing 90 degree turn
@@ -325,20 +333,26 @@ void loop(){
         turn90(turn1dir); //DETERMINE DIRECTION BASED ON ITEM NUMBER
         robotState = moving45;
       }
-    break;
+      break;
     case(moving45): //from straight path to completing 45 degree turn
-      lineTracking(170, 180, 190);
+      lineTracking(130, 140, 150);
+
+
       if((turnIRVal_L == 1) && (turnIRVal_R == 0)) {
+        turn45(true); // navigate turn45 in one go
+        for(int i = 0; i < 100; i++) // 10 seconds to adjust
+        {
+          lineTracking(130,150,170);
+          delay(100);
+        }
         turn45(true);
-        lineTracking(130,150,170);
-        delay(2000);
-        lineTracking(130,150,170);
-        delay(3000);
-        turn45(true);
+  
+  
+        
         robotState = navigateObstacles;
       }
   
-    break;
+      break;
     case(navigateObstacles): //for bumpy road and dynamic obstacle
       
       lineTracking(50, 70, 100); 
@@ -372,45 +386,49 @@ void loop(){
         lineCount = 0;
       }
       
-    break;
+      break;
     case(droppingOff): 
 
         
-        if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
-          lineTracking(130,150,170);;
+      if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
+        lineTracking(130,150,170);
+      }
+      else{
+        lineTracking(130,150,170);
+        turn90(false); //turn left
+      }
+
+      if((lineDetected == false) && (turnIRVal_R == 1)&& (lineCount < lineLimitPickup)) //detect first intersection
+      {
+        lineCount++;
+        lineDetected = true;
+      }
+      else if ((lineDetected == true) && (turnIRVal_R == 0) && (lineCount < lineLimitPickup)) //no longer seeing intersections
+      {
+        lineDetected = false;
+      }
+
+      if(lineCount == lineLimitDropOff) //reached intersection for dropping off item
+      {
+        lineTracking(50,70,100); //slow down, we're approaching drop off
+
+        if (( lineLimitDropOff>=0) && (turnCount90 == 3)){
+            lineTracking(50, 70, 100);
+            turn90(false); //always turn right
         }
-        else{
-          lineTracking(130,150,170);;
-          turn90(false); //turn left
+        else if((analogRead(R_S) < 100)&& (analogRead(R_S)< 100) && (analogRead(M_S)<100))// no longer seeing black line
+        {
+            myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+            delay(1000); // wait to be stable
+            dropItem();
+            uTurn();
+            robotState = endStop;
         }
 
-        if(lineDetected == false && turnIRVal_R == 1 && lineCount < lineLimitPickup) //detect first intersection
-        {
-          lineCount++;
-          lineDetected = true;
-        }
-        else if (lineDetected == true && turnIRVal_R == 0 && lineCount < lineLimitPickup) //no longer seeing intersections
-        {
-          lineDetected = false;
-        }
-
-        if(lineCount == lineLimitDropOff) //reached intersection for dropping off item
-        {
-          delay(4000);
-//          if (ultrasonicVal < ~0){ //robot is approaching the wall
-//          }
-          if (lineLimitDropOff>=0){
-              lineTracking(50, 70, 100);
-              turn90(false); //always turn right
-          }
-          myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-          delay(1000); // wait to be stable
-          dropItem();
-          uTurn();
-          robotState = endStop;
-          
-        }
-    break;
+  
+        
+      }
+      break;
     case(endStop):
       lineTracking(130,150,170);
       stopEnd();
