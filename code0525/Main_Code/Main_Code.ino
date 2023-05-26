@@ -128,7 +128,7 @@ void grabItem(){
     gripper_servo.write(0);
     delay(1000);
 //  gripper_servo.write(90);//gripper fully open 
-  for (int angle = 0; angle <= 130; angle+=1){
+  for (int angle = 0; angle <= 90; angle+=1){
 //    if(analogRead(pressurePin) > 1000){
 //      break;
 //    }
