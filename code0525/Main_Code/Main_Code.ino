@@ -1,3 +1,8 @@
+#include <boarddefs.h>
+#include <IRremote.h>
+#include <IRremoteInt.h>
+#include <ir_Lego_PF_BitStreamEncoder.h>
+
 #include <avr/wdt.h>
 #include <stdio.h>
 #include <string.h>
@@ -116,34 +121,56 @@ int getUltrasonic(){
 
 void grabItem(){
   //fill up angle later
-//  lifting_servo.write(??); // 0 and 180 mean 2 directions.
-//  delay(?);
-//  slider_servo.write(??); 
-//  delay(?);
 
-    gripper_servo.write(90);
-    delay(1000);
-//    gripper_servo.write(180);
-    delay(1000);
-    gripper_servo.write(0);
-    delay(1000);
-//  gripper_servo.write(90);//gripper fully open 
-  for (int angle = 0; angle <= 90; angle+=1){
-//    if(analogRead(pressurePin) > 1000){
-//      break;
-//    }
-//    else{
-//      gripper_servo.write(angle);
-//      delay(15);
-//    }
-//  } 
-//  delay(5000);
-//  gripper_servo.write(0);
-  delay(15);
-////  silder_servo.write(??);
-//  delay(?);
-//  lifting_servo.write(??);
-//  delay(?)
+  //steps: drive slider servo forward, drive lifter servo up, grab item, then retract slider servo
+
+  slider_servo.write(180); //drive mechanism forward
+  delay(2500);
+  slider_servo.write(90); //rest
+  delay(1000);
+//  
+//
+//  lifting_servo.write(45); // drive down
+//  delay(3000);
+//  lifting_servo.write(90);
+//  delay(1000);
+  lifting_servo.write(180); // drive up
+  delay(3000);
+  lifting_servo.write(90);
+  delay(1000);
+
+  gripper_servo.write(180); //fully open
+  delay(1000);
+  
+  
+  // progressively close
+  for (int angle = 180; angle >= 0; angle--){
+    if(analogRead(pressurePin) > 600){
+      break;
+    }
+    else{
+      gripper_servo.write(angle);
+      delay(15);
+    }
+//    Serial.println(analogRead(pressurePin));
+  } 
+  delay(3000);
+//
+//
+//  gripper_servo.write(180); //let go
+//  delay(100);3
+  
+  slider_servo.write(0); //drive mechanism backward
+  delay(3000);
+  slider_servo.write(90); //rest
+  delay(1000);  
+
+  lifting_servo.write(0); //bring gripper down
+  delay(3000);
+  lifting_servo.write(90); //rest
+  delay(1000);
+
+
   haveItem = true;
 }
 void dropItem(){}
@@ -217,6 +244,7 @@ void setup(){
   slider_servo.attach(servoSlider);
   lifting_servo.attach(servoLift);
   gripper_servo.attach(servoGripper);
+  
   robotState = startUp;
   
 }
@@ -229,13 +257,16 @@ void loop(){
   encoderVal = (Rcounts+Lcounts)/2; //encoder value is the average of left and righr encoder
   turnIRVal_L = digitalRead(ir_sensor_L);
   turnIRVal_R = digitalRead(ir_sensor_R);
-  Serial.print(turnIRVal_L);
+//  Serial.print(turnIRVal_L);
 //  Serial.print(robotState);
 //  Serial.print(itemNum);
-  Serial.print(" ");
-  Serial.println(turnIRVal_R);
-  delay(500);
+//  Serial.print(" ");
+//  Serial.println(turnIRVal_R);
+  delay(50);
 
+//  int x = analogRead(pressurePin);
+//  int x = digitalRead(pressurePin);
+//  Serial.print(x);
     
 //  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
 //  if(IRrecv_button > 6) // emergency stop button

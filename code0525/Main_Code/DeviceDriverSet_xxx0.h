@@ -47,21 +47,19 @@ public:
 
 
 //servo for ultrasonic pins (S4)
-#define ultrasonicServoPin 10 // servo pin for ultrasonic servo(S4)
+#define ultrasonicServoPin 11 // servo pin for ultrasonic servo(S4)
 
 //Servo 1 (slider)
 #define servoSlider 44
 
 //Servo 2 (lifting system)
-#define servoLift 48
+#define servoLift 45
 
 //Servo 3 (gripper)
-#define servoGripper 45
-
-
+#define servoGripper 46
 
 // pressure sensor
-#define pressurePin A10
+#define pressurePin A11
 
 // ir_sensor for number of seeing black line
 #define ir_sensor_L 26
