@@ -159,16 +159,16 @@ void grabItem(){
 //
 //  gripper_servo.write(180); //let go
 //  delay(100);3
-  
-  slider_servo.write(0); //drive mechanism backward
-  delay(3000);
-  slider_servo.write(90); //rest
-  delay(1000);  
-
-  lifting_servo.write(0); //bring gripper down
-  delay(3000);
-  lifting_servo.write(90); //rest
-  delay(1000);
+//  
+//  slider_servo.write(0); //drive mechanism backward
+//  delay(3000);
+//  slider_servo.write(90); //rest
+//  delay(1000);  
+//
+//  lifting_servo.write(0); //bring gripper down
+//  delay(3000);
+//  lifting_servo.write(90); //rest
+//  delay(1000);
 
 
   haveItem = true;

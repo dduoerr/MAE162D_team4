@@ -275,7 +275,7 @@ void loop() {
         if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
 
           lineTracking(50, 70, 100);
-          if (ultrasonicVal < 20){ //robot is approaching the wall
+          if (ultrasonicVal < 0){ //robot is approaching the wall
               myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
               delay(1000); // wait to be stable
               grabItem();
