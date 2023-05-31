@@ -38,6 +38,7 @@ int lineCount = 0;
 int lineLimitPickup = 0;
 int lineLimitDropOff = 0;
 int count = 0;
+long t_0 = 0;
 boolean lineDetected = false;
 
 // Create a new servo object:
@@ -296,9 +297,37 @@ void setup(){
   lifting_servo.attach(servoLift);
   gripper_servo.attach(servoGripper);
   
-  robotState = startUp;
+  //robotState = startUp;
   ultrasonicVal = 20;
 }
+
+//void loop(){
+//      // lineTracking(20, 70, 120); 
+////
+//      //use ultrasonic data to detect if object is not in front of the vehicle;
+////      delay(15);
+////      int ultrasonicValPrev = getUltrasonic();
+////      delay(50);
+//      int ultrasonicVal = getUltrasonic();
+//     
+////      int rateOfChange = ultrasonicValNow - ultrasonicValPrev;
+//      
+//      if(ultrasonicVal > 10) { //actually detecting obstacle and not the wall/something else
+//        //obstacles is moving away, so speed past the object
+//        lineTracking(10, 70, 150);
+////        Serial.println(analogRead(R_S));
+////        Serial.print(" L:");
+////        Serial.println(analogRead(L_S));
+//      }
+//      else {//dynamic obstacle is present. Stop.
+//           myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
+//      }
+//
+//      if(lineDetected == false && digitalRead(ir_sensor_L)) { //detect first intersection, transition to drop off mode
+//        //robotState = droppingOff;
+//        lineCount = 0;
+//      }
+//}
 
 
 //test
@@ -328,12 +357,13 @@ void loop(){
   
   switch (robotState){
     case(remoteControl):
-      turnDegree(true, 90);
-      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
-      delay(5000);
-      turnDegree(true, 180);
-      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
-      delay(5000);
+//      turnDegree(true, 90);
+//      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
+//      delay(5000);
+//      turnDegree(true, 180);
+//      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
+//      delay(5000);
+      robotState = navigateObstacles;
       break;
       
     case(startUp):
@@ -422,6 +452,7 @@ void loop(){
               grabItem();
               lineCount = 0;
               turnCount90 = 0;
+              lineDetected = false;
               robotState = moving90;
           }
         }
@@ -442,6 +473,7 @@ void loop(){
         turnDegree(turn1dir, 90); //DETERMINE DIRECTION BASED ON ITEM NUMBER
         
         robotState = navigateObstacles;
+        t_0 = millis();
       }
       break;
       
@@ -451,6 +483,7 @@ void loop(){
 //      if((digitalRead(ir_sensor_L)) && (!digitalRead(ir_sensor_R))) {
 //        myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
 //        delay(1000); // wait to be stable
+           Serial.println("About to turn");
 //        turnDegree(true, 45); // navigate turn45 in one go
 ////        turn45(true);
 // 
@@ -481,36 +514,40 @@ void loop(){
       
       if(ultrasonicVal > 10) { //actually detecting obstacle and not the wall/something else
         //obstacles is moving away, so speed past the object
-        lineTracking(80, 150, 200);
+        lineTracking(10, 70, 150);
       }
       else {//dynamic obstacle is present. Stop.
            myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
       }
 
-      if(lineDetected == false && digitalRead(ir_sensor_L)) { //detect first intersection, transition to drop off mode
+      if((millis() - t_0 > 90000) && digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) { //detect first intersection, transition to drop off mode
         robotState = droppingOff;
         lineCount = 0;
+        if (itemNum == 1){ // item 1 is the special case, can go straight up to dropping point without turning
+          lineTracking(130,150,170);
+          delay(500);
+        }
+        else{
+          lineTracking(130,150,170);
+          turnDegree(false, 90); //turn left
+          delay(500);
+          lineTracking(130,150,170);
+        }
       }
       
       break;
     }
     case(droppingOff): 
 
-        
-      if (itemNum != 1){ // item 1 is the special case, can go straight up to dropping point without turning
-        lineTracking(130,150,170);
-      }
-      else{
-        lineTracking(130,150,170);
-        turnDegree(false, 90); //turn left
-      }
-
-      if((lineDetected == false) && (digitalRead(ir_sensor_R))&& (lineCount < lineLimitPickup)) //detect first intersection
+    
+      lineTracking(130, 150, 170);
+      
+      if((lineDetected == false) && (digitalRead(ir_sensor_R))&& (lineCount < lineLimitDropOff)) //detect first intersection
       {
         lineCount++;
         lineDetected = true;
       }
-      else if ((lineDetected == true) && (!digitalRead(ir_sensor_R)) && (lineCount < lineLimitPickup)) //no longer seeing intersections
+      else if ((lineDetected == true) && (!digitalRead(ir_sensor_R)) && (lineCount < lineLimitDropOff)) //no longer seeing intersections
       {
         lineDetected = false;
       }
@@ -519,7 +556,7 @@ void loop(){
       {
         lineTracking(50,70,100); //slow down, we're approaching drop off
 
-        if (( lineLimitDropOff>=0) && (turnCount90 == 3)){
+        if (( lineLimitDropOff>0) && (turnCount90 == 3)){
             lineTracking(50, 70, 100);
             turn90(false); //always turn right
         }
