@@ -58,11 +58,7 @@ public:
 //Servo 3 (gripper)
 #define servoGripper 11
 
-// pins for the encoder inputs
-#define RH_ENCODER_A 32
-#define RH_ENCODER_B 33
-#define LH_ENCODER_A 39
-#define LH_ENCODER_B 38
+
 
 // pressure sensor
 #define pressurePin A10

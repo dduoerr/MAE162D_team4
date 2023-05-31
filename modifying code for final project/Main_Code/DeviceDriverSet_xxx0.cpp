@@ -8,14 +8,6 @@ void DeviceDriverSet_Motor::DeviceDriverSet_Motor_Init(void)
   pinMode(PIN_Motor_AIN_1, OUTPUT);
   pinMode(PIN_Motor_BIN_1, OUTPUT);
   pinMode(PIN_Motor_STBY, OUTPUT);
-  pinMode(RH_ENCODER_A,INPUT);//initialze encoder pins
-  pinMode(RH_ENCODER_B,INPUT);
-  pinMode(LH_ENCODER_A,INPUT);
-  pinMode(LH_ENCODER_B,INPUT);
-  digitalWrite(RH_ENCODER_A, LOW);//initialize pin states
-  digitalWrite(RH_ENCODER_B, LOW);
-  digitalWrite(LH_ENCODER_A, LOW);
-  digitalWrite(LH_ENCODER_B, LOW);
 
 }
 
@@ -98,48 +90,48 @@ bool DeviceDriverSet_IRrecv::DeviceDriverSet_IRrecv_Get(uint8_t *IRrecv_Get /*ou
     {
     case /* constant-expression */ aRECV_upper:
     case /* constant-expression */ bRECV_upper:
-      /* code */ *IRrecv_Get = 1;
+      /* code */ *IRrecv_Get = 11;
       break;
     case /* constant-expression */ aRECV_lower:
     case /* constant-expression */ bRECV_lower:
-      /* code */ *IRrecv_Get = 2;
+      /* code */ *IRrecv_Get = 12;
       break;
     case /* constant-expression */ aRECV_Left:
     case /* constant-expression */ bRECV_Left:
-      /* code */ *IRrecv_Get = 3;
+      /* code */ *IRrecv_Get = 13;
       break;
     case /* constant-expression */ aRECV_right:
     case /* constant-expression */ bRECV_right:
-      /* code */ *IRrecv_Get = 4;
+      /* code */ *IRrecv_Get = 14;
       break;
     case /* constant-expression */ aRECV_ok:
     case /* constant-expression */ bRECV_ok:
-      /* code */ *IRrecv_Get = 5;
+      /* code */ *IRrecv_Get = 15;
       break;
 
     case /* constant-expression */ aRECV_1:
     case /* constant-expression */ bRECV_1:
-      /* code */ *IRrecv_Get = 6;
+      /* code */ *IRrecv_Get = 1;
       break;
     case /* constant-expression */ aRECV_2:
     case /* constant-expression */ bRECV_2:
-      /* code */ *IRrecv_Get = 7;
+      /* code */ *IRrecv_Get = 2;
       break;
     case /* constant-expression */ aRECV_3:
     case /* constant-expression */ bRECV_3:
-      /* code */ *IRrecv_Get = 8;
+      /* code */ *IRrecv_Get = 3;
       break;
     case /* constant-expression */ aRECV_4:
     case /* constant-expression */ bRECV_4:
-      /* code */ *IRrecv_Get = 9;
+      /* code */ *IRrecv_Get = 4;
       break;
     case /* constant-expression */ aRECV_5:
     case /* constant-expression */ bRECV_5:
-      /* code */ *IRrecv_Get = 10;
+      /* code */ *IRrecv_Get = 5;
       break;
     case /* constant-expression */ aRECV_6:
     case /* constant-expression */ bRECV_6:
-      /* code */ *IRrecv_Get = 11;
+      /* code */ *IRrecv_Get = 6;
       break;
     default:
       // *IRrecv_Get = 5;
