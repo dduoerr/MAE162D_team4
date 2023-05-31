@@ -121,11 +121,22 @@ void loop(){
 
   gripper_servo.write(180); //fully open
   delay(1000);
-
-//  lifting_servo.write(180); //drive mechanism up
-//  delay(3000);
-//  lifting_servo.write(90); //rest
+//  gripper_servo.write(90); //fully open
 //  delay(1000);
+//  
+//  for(int i = 180; i > 90; i--)
+//  {
+//    gripper_servo.write(i);
+//    delay(30);
+//  }
+
+//    
+//  delay(1000);
+
+  lifting_servo.write(180); //drive mechanism up
+  delay(3000);
+  lifting_servo.write(90); //rest
+  delay(1000);
   
 
 

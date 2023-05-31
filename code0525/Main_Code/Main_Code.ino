@@ -52,7 +52,7 @@ long Rcounts = 0;
 long Lcounts = 0;
 
 //  //Initialize all variable with data type appears in the void loop
-long ultrasonicVal, encoderVal;
+long encoderVal;
 int turnIRVal_L,turnIRVal_R;
 
 enum {startUp, pickingUp, moving90, moving45, navigateObstacles,droppingOff, endStop, remoteControl };
@@ -82,46 +82,46 @@ void lineTracking(int slow, int medium, int high){
 
 }
 
-void turn45(bool dir){ //only ever turns 45 degrees in the left direction, but left for robustness
-
-    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-    delay(500);
-    myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-    delay(2250);
-    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-
-
-}
-
-void turn90(bool dir){ //UPDATE FOR NO WHITE CHECK
-
-    Serial.println("turning 90");
-    long threshold = 5000;
-    if(dir) // turn left
-    {
-      long start_R = Rcounts;
-      while(Rcounts - start_R < threshold){
-        Serial.println(Rcounts);
-        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-      }
-    }
-    else{ // turn right
-      long start_L = Lcounts;
-      while(Lcounts - start_L < threshold){
-        Serial.println(Lcounts);
-        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-      }
-    }
-    
-    //turn 90 degrees, where dir = true is turn left
+//void turn45(bool dir){ //only ever turns 45 degrees in the left direction, but left for robustness
+//
 //    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-//    delay(700);
+//    delay(500);
 //    myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-//    delay(4500);
+//    delay(2250);
 //    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-    turnCount90++;
+//
+//
+//}
 
-}
+//void turn90(bool dir){ //UPDATE FOR NO WHITE CHECK
+//
+//    Serial.println("turning 90");
+//    long threshold = 5000;
+//    if(dir) // turn left
+//    {
+//      long start_R = Rcounts;
+//      while(Rcounts - start_R < threshold){
+//        Serial.println(Rcounts);
+//        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+//      }
+//    }
+//    else{ // turn right
+//      long start_L = Lcounts;
+//      while(Lcounts - start_L < threshold){
+//        Serial.println(Lcounts);
+//        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+//      }
+//    }
+//    
+//    //turn 90 degrees, where dir = true is turn left
+////    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
+////    delay(700);
+////    myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+////    delay(4500);
+////    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
+//    turnCount90++;
+//
+//}
 
 
 void turnDegree(bool dir, int degree){ //turn designated number of degrees
@@ -130,22 +130,44 @@ void turnDegree(bool dir, int degree){ //turn designated number of degrees
 //    Rcounts = 0;
 //    Lcounts = 0;
     long threshold = 0;
+    int lineCount = 0; //number of times we see white
     if(degree == 90)
     {
       threshold = 3350;
       turnCount90++;
+      lineCount = 1;
     }
     else if(degree == 180)
     {
       threshold = 6600;
+      lineCount = 1;
     }
-    else if(degree == 45)
-    {
-      threshold = 1675;
-      turnCount45++;
-    }
+//    else if(degree == 45)
+//    {
+//      threshold = 1675;
+//      turnCount45++;
+//    }
+
+    bool seeWhite = false;
     myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-    delay(threshold);
+    for(int i = 0; i < lineCount;) //assume we start on black line
+    {
+      if(!seeWhite && (analogRead(R_S) < 100)&&(analogRead(L_S) < 100) && (analogRead(M_S) < 100)) // now seeing all white line 
+      { 
+        seeWhite = true;
+      }
+      else if ( seeWhite && (analogRead(R_S) > 100)&&(analogRead(L_S) > 100) && (analogRead(M_S) > 100)) // now seeing all black lines
+      {
+        i++;
+        seeWhite = false;
+      }
+      
+    }
+    delay(700);
+    myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+    delay(1000); // wait to be stable
+        
+//    delay(threshold);
       
 //    if(dir) // turn left
 //    {
@@ -165,7 +187,7 @@ void turnDegree(bool dir, int degree){ //turn designated number of degrees
 //    Serial.println("finished turning");
 }
 
-int getUltrasonic(){
+double getUltrasonic(){
    long duration;
    pinMode(ultrasonic_ping, OUTPUT);
    digitalWrite(ultrasonic_ping, LOW);
@@ -177,7 +199,7 @@ int getUltrasonic(){
    duration = pulseIn(ultraonisc_echo, HIGH);
 
    //convert to centimeters
-   return duration / 29 / 2;
+   return duration / 29.0 / 2;
 }
 
 
@@ -187,19 +209,17 @@ void grabItem(){
   //steps: drive slider servo forward, drive lifter servo up, grab item, then retract slider servo
 
   slider_servo.write(180); //drive mechanism forward
-  delay(2500);
+  delay(4500);
   slider_servo.write(90); //rest
   delay(1000);
 
   gripper_servo.write(180); //fully open
   delay(1000);
-
-
   
   
   // progressively close
   for (int angle = 180; angle >= 0; angle--){
-    if(analogRead(pressurePin) > 1200){
+    if(analogRead(pressurePin) > 1000){
       break;
     }
     else{
@@ -213,35 +233,25 @@ void grabItem(){
 //
   turnDegree(true,180);
 
-  
+  lifting_servo.write(45);
+  delay(500);
+  lifting_servo.write(90);
 
   haveItem = true;
 }
 void dropItem(){
   lifting_servo.write(0); //lifter down
-  delay(2500);
+  delay(8000);
   lifting_servo.write(90); //rest
   delay(1000);
-  gripper_servo.write(180);
+  for(int i = gripper_servo.read(); i < 180; i++)
+  {
+    gripper_servo.write(i);
+    delay(15);
   }
-
   
-//void dropItem(){
-//  slider_servo.write(??);
-//  delay(?);
-//  gripper_servo.write(??);
-//  slider_servo.write(??);
-//  delay(?);
-//  haveItem = false;
-//}
-
-void uTurn(){
-    myMotors.DeviceDriverSet_Motor_control(true, 150, false, 150, true); //two wheels in different directions
-    delay(9000); //time to turn
-    myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-    delay(1000); // wait to be stable
-    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true); //go straight
 }
+
 
 void stopEnd(){ //when blackline gone at the end, stop the robot
   if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){
@@ -298,7 +308,10 @@ void setup(){
   gripper_servo.attach(servoGripper);
   
   //robotState = startUp;
-  ultrasonicVal = 20;
+//0..  ultrasonicVal = 20.0;
+
+  gripper_servo.write(180); //fully open
+  delay(1000);
 }
 
 //void loop(){
@@ -364,6 +377,8 @@ void loop(){
 //      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
 //      delay(5000);
       robotState = navigateObstacles;
+      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+      delay(1000); // wait to be stable
       break;
       
     case(startUp):
@@ -441,15 +456,18 @@ void loop(){
       if(lineCount == lineLimitPickup) //reached intersection for picking up item
       {
 
-        if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
+        if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item]
 
           lineTracking(50, 70, 90);
-          ultrasonicVal = getUltrasonic();
+          double ultrasonicVal = getUltrasonic();
 //          ultrasonicVal--;
-          if (ultrasonicVal < 3){ //robot is x distance away from wall
+          Serial.println(ultrasonicVal);  
+          if (ultrasonicVal > 0.5 && ultrasonicVal < 2){ //robot is x distance away from wall
+//              lineTracking(40, 60, 80);
               myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
               delay(3000); // wait to be stable
               grabItem();
+              myMotors.DeviceDriverSet_Motor_control(false,80, false, 80, true); //stop
               lineCount = 0;
               turnCount90 = 0;
               lineDetected = false;
@@ -508,7 +526,7 @@ void loop(){
 //      delay(15);
 //      int ultrasonicValPrev = getUltrasonic();
 //      delay(50);
-      int ultrasonicVal = getUltrasonic();
+      double ultrasonicVal = getUltrasonic();
      
 //      int rateOfChange = ultrasonicValNow - ultrasonicValPrev;
       
@@ -520,7 +538,7 @@ void loop(){
            myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
       }
 
-      if((millis() - t_0 > 90000) && digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) { //detect first intersection, transition to drop off mode
+      if((millis() - t_0 > 60000) && digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) { //detect first intersection, transition to drop off mode
         robotState = droppingOff;
         lineCount = 0;
         if (itemNum == 1){ // item 1 is the special case, can go straight up to dropping point without turning
@@ -529,7 +547,7 @@ void loop(){
         }
         else{
           lineTracking(130,150,170);
-          turnDegree(false, 90); //turn left
+          turnDegree(true, 90); //turn left
           delay(500);
           lineTracking(130,150,170);
         }
@@ -556,17 +574,19 @@ void loop(){
       {
         lineTracking(50,70,100); //slow down, we're approaching drop off
 
-        if (( lineLimitDropOff>0) && (turnCount90 == 3)){
+        if (( lineLimitDropOff>0)){
             lineTracking(50, 70, 100);
-            turn90(false); //always turn right
-        }
-        else if((analogRead(R_S) < 100)&& (analogRead(R_S)< 100) && (analogRead(M_S)<100))// no longer seeing black line
-        {
+            turnDegree(false, 90); //always turn right
             myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
             delay(1000); // wait to be stable
             dropItem();
-            uTurn();
             robotState = endStop;
+        }
+        else{ //special case for item 1
+          myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+          delay(1000); // wait to be stable
+          dropItem();
+          robotState = endStop;
         }
       }
       else{
@@ -575,8 +595,8 @@ void loop(){
       break;
       
     case(endStop):
-      lineTracking(130,150,170);
-      stopEnd();
+//      lineTracking(130,150,170);
+//      stopEnd();
       break;
     default:
       break;  
