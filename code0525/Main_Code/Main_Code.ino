@@ -90,17 +90,72 @@ void turn45(bool dir){ //only ever turns 45 degrees in the left direction, but l
 }
 
 void turn90(bool dir){ //UPDATE FOR NO WHITE CHECK
+
+    Serial.println("turning 90");
+    long threshold = 5000;
+    if(dir) // turn left
+    {
+      long start_R = Rcounts;
+      while(Rcounts - start_R < threshold){
+        Serial.println(Rcounts);
+        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+      }
+    }
+    else{ // turn right
+      long start_L = Lcounts;
+      while(Lcounts - start_L < threshold){
+        Serial.println(Lcounts);
+        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+      }
+    }
     
     //turn 90 degrees, where dir = true is turn left
-    //if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){ // seeing white
-   // if(digitalRead(ir_sensor_R)){ //ir sensor on the right see a black line
-        myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-        delay(700);
+//    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
+//    delay(700);
+//    myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+//    delay(4500);
+//    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
+    turnCount90++;
+
+}
+
+
+void turnDegree(bool dir, int degree){ //turn designated number of degrees
+
+    Serial.println("turning " + degree);
+    
+    long threshold = 0;
+    if(degree == 90)
+    {
+      threshold = 1666;
+    }
+    else if(degree == 180)
+    {
+      threshold = 3333;
+    }
+    else if(degree == 45)
+    {
+      threshold = 800;
+    }
+    
+    if(dir) // turn left
+    {
+      long start_R = Rcounts;
+      while(Rcounts - start_R < threshold){
+        Serial.println("Rcounts: " + Rcounts);
         myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-        delay(4500);
-        myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-        turnCount90++;
-    //}
+      }
+    }
+    else{ // turn right
+      long start_L = Lcounts;
+      while(Lcounts - start_L < threshold){
+        Serial.println("Lcounts: " + Lcounts);
+        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
+      }
+    }
+
+    turnCount90++;
+    Serial.println("finished turning");
 }
 
 int getUltrasonic(){
@@ -246,7 +301,7 @@ void setup(){
   gripper_servo.attach(servoGripper);
   
   robotState = startUp;
-  
+  ultrasonicVal = 20;
 }
 
 
@@ -255,14 +310,6 @@ void loop(){
   
   //ultrasonicVal = getUltrasonic();
   encoderVal = (Rcounts+Lcounts)/2; //encoder value is the average of left and righr encoder
-  turnIRVal_L = digitalRead(ir_sensor_L);
-  turnIRVal_R = digitalRead(ir_sensor_R);
-//  Serial.print(turnIRVal_L);
-//  Serial.print(robotState);
-//  Serial.print(itemNum);
-//  Serial.print(" ");
-//  Serial.println(turnIRVal_R);
-  delay(50);
 
 //  int x = analogRead(pressurePin);
 //  int x = digitalRead(pressurePin);
@@ -270,121 +317,131 @@ void loop(){
     
 //  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
 //  if(IRrecv_button > 6) // emergency stop button
-  if(robotState == startUp)
-  {
-      grabItem();
-      robotState = endStop;
-  }
+//  if(robotState == startUp)
+//  {
+//      grabItem();
+//      robotState = endStop;
+//  }
 
   
-//  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
-//  if(IRrecv_button > 6) // emergency stop button
-//  {
-//    robotState = remoteControl;
-//  }
-//  
-//  switch (robotState){
-//    case(remoteControl):
-//
-//    
-//      break;
-//    case(startUp):
-//        IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
-//        switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
-//        // put   myMotors.DeviceDriverSet_Motor_Init();  inside each case to know if remote control works
-//        case 1:
-//          itemNum = 1;
-//          lineLimitPickup = 1;
-//          lineLimitDropOff = 0;
-//          robotState = pickingUp;
-//          turn1dir = true;
-//          
-//          break;
-//        case 2:
-//          itemNum = 2;
-//          lineLimitPickup = 2;
-//          lineLimitDropOff = 1;
-//          robotState = pickingUp;
-//          turn1dir = true;
-//
-//          break;
-//        case 3:
-//          itemNum = 3;
-//          lineLimitPickup = 3;
-//          lineLimitDropOff = 2;
-//          robotState = pickingUp;
-//          turn1dir = true;
-//
-//          break;
-//        case 4:
-//          itemNum = 4;
-//          lineLimitPickup = 1;
-//          lineLimitDropOff = 3;
-//          robotState = pickingUp;
-//          turn1dir = false;
-//
-//          break;
-//        case 5:
-//          itemNum = 5;
-//          lineLimitPickup = 2;
-//          lineLimitDropOff = 4;
-//          robotState = pickingUp;
-//          turn1dir = false;
-//
-//          break;
-//        case 6:
-//          itemNum = 6;
-//          lineLimitPickup = 3;
-//          lineLimitDropOff = 5;
-//          robotState = pickingUp;
-//          turn1dir = false;
-//          break;
-//        default:
-//          break;
-//        }
-//      break;
-//    case(pickingUp): //from start to picking up item
-//      lineTracking(130, 150, 170);
-//      if(lineDetected == false && turnIRVal_L == 1 && lineCount < lineLimitPickup) //detect first intersection
-//      {
-//        lineCount++;
-//        lineDetected = true;
-//      }
-//      else if (lineDetected == true && turnIRVal_L == 0 && lineCount < lineLimitPickup) //no longer seeing intersections
-//      {
-//        lineDetected = false;
-//      }
-//
-//      if(lineCount == lineLimitPickup) //reached intersection for picking up item
-//      {
-//        if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
-//
-//          lineTracking(50, 70, 100);
-//          if (ultrasonicVal < 20){ //robot is x distance away from wall
-//              myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-//              delay(1000); // wait to be stable
+  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+  if(IRrecv_button > 6) // emergency stop button
+  {
+    robotState = remoteControl;
+  }
+  
+  switch (robotState){
+    case(remoteControl):
+      
+      break;
+    case(startUp):
+        IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
+        switch(IRrecv_button) { //determine itemNum, turn1dis, turn1dir, turn2dis, lineLimit, lineLimitDropOff
+          case 1:
+            itemNum = 1;
+            lineLimitPickup = 1;
+            lineLimitDropOff = 0;
+            robotState = pickingUp;
+            turn1dir = true;
+            break;
+          case 2:
+            itemNum = 2;
+            lineLimitPickup = 2;
+            lineLimitDropOff = 1;
+            robotState = pickingUp;
+            turn1dir = true;
+            break;
+          case 3:
+            itemNum = 3;
+            lineLimitPickup = 3;
+            lineLimitDropOff = 2;
+            robotState = pickingUp;
+            turn1dir = true;
+  
+            break;
+          case 4:
+            itemNum = 4;
+            lineLimitPickup = 1;
+            lineLimitDropOff = 3;
+            robotState = pickingUp;
+            turn1dir = false;
+  
+            break;
+          case 5:
+            itemNum = 5;
+            lineLimitPickup = 2;
+            lineLimitDropOff = 4;
+            robotState = pickingUp;
+            turn1dir = false;
+  
+            break;
+          case 6:
+            itemNum = 6;
+            lineLimitPickup = 3;
+            lineLimitDropOff = 5;
+            robotState = pickingUp;
+            turn1dir = false;
+            break;
+          default:
+            break;
+        }
+      break;
+    case(pickingUp): //from start to picking up item
+      Serial.println("asdf");
+//      turnIRVal_L = digitalRead(ir_sensor_L);
+//      turnIRVal_R = digitalRead(ir_sensor_R);
+//      Serial.print(turnIRVal_L + " " + turnIRVal_R);
+      if(digitalRead(ir_sensor_L))
+      {
+        Serial.println("detecting");
+      }
+      lineTracking(130, 150, 170);
+      if((lineDetected == false) && digitalRead(ir_sensor_L) && (lineCount < lineLimitPickup)) //detect first intersection
+      {
+        lineCount++;
+        lineDetected = true;
+      }
+      else if ((lineDetected == true) && (!digitalRead(ir_sensor_L)) && (lineCount < lineLimitPickup)) //no longer seeing intersections
+      {
+        lineDetected = false;
+      }
+
+      if(lineCount == lineLimitPickup) //reached intersection for picking up item
+      {
+
+        if (turnCount90 == 1 && !haveItem){ //robot allready make the turn and do not have the item, and go straight to item
+
+          lineTracking(50, 70, 100);
+//          ultrasonicVal = getUltrasonic();
+          ultrasonicVal--;
+          if (ultrasonicVal < 10){ //robot is x distance away from wall
+              myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+              delay(3000); // wait to be stable
 //              grabItem();
-//              uTurn();
-//              lineCount = 0;
-//              turnCount90 = 0;
-//              robotState = moving90;
-//        }
-//        else {
-//          turn90(turn1dir); //change boolean based on juice box position
-//        }
-//      }
-//      else{
-//          delay(1300); //give time to either pass intersection or turn.
-//      }
-//      break;
-//    case(moving90): //from after picking up item to completing 90 degree turn
-//      lineTracking(50, 70, 100);
-//      if(turnIRVal_L == 1) { //not sure if 1 is black or white
-//
-//        turn90(turn1dir); //DETERMINE DIRECTION BASED ON ITEM NUMBER
-//        robotState = moving45;
-//      }
-//      break;
+              turnDegree(turn1dir,180);
+              lineCount = 0;
+              turnCount90 = 0;
+              robotState = moving90;
+          }
+        }
+        else {
+          Serial.println("turning");
+//          delay(1000);
+          turnDegree(turn1dir, 90); //change boolean based on juice box position
+        }
+      }
+      else{
+          delay(1300); //give time to either pass intersection or turn.
+      }
+      break;
+    case(moving90): //from after picking up item to completing 90 degree turn
+      lineTracking(50, 70, 100);
+      if( digitalRead(ir_sensor_L)) { //not sure if 1 is black or white
+
+        turn90(turn1dir); //DETERMINE DIRECTION BASED ON ITEM NUMBER
+        robotState = moving45;
+      }
+      break;
 //    case(moving45): //from straight path to completing 45 degree turn
 //      lineTracking(130, 140, 150);
 //
@@ -484,15 +541,15 @@ void loop(){
 //      lineTracking(130,150,170);
 //      stopEnd();
 //      break;
-//    default:
-//      break;  
-//    }    
+    default:
+      break;  
+    }   
 //   
 //
 //        
 
 
-  }
+}
 
 
   
