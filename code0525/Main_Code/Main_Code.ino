@@ -101,11 +101,6 @@ void turnDegree(bool dir, int degree){ //turn designated number of degrees
       threshold = 6600;
       lineCount = 1;
     }
-//    else if(degree == 45)
-//    {
-//      threshold = 1675;
-//      turnCount45++;
-//    }
 
     bool seeWhite = false;
     myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
@@ -279,11 +274,19 @@ void loop(){
 
   
   IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
-  if(IRrecv_button == 15) // emergency stop button
+  if(IRrecv_button == 15) // emergency stop button, press "ok"
   {
     robotState = finished;
   }
-  else if(IRrecv_button > 6 && IRrecv_button < 15)
+  else if(IRrecv_button == 11) //start over, press "up"
+  {
+    robotState = startUp;
+  }
+  else if(IRrecv_button == 12) //test from desired state, press "down"
+  {
+    robotState = remoteControl;
+  }
+  else if(IRrecv_button > 12 && IRrecv_button < 15) // any other button, tell device to reset
   {
     robotState = resetServo;
   }
