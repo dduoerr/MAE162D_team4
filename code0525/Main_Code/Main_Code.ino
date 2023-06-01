@@ -79,9 +79,25 @@ void lineTracking(int slow, int medium, int high){
   else if(analogRead(L_S) < 100){
     myMotors.DeviceDriverSet_Motor_control(true, high, true, slow, true);
   }
-
 }
 
+void lineTrackingBackward(int slow, int medium, int high){
+ 
+  //go backwards
+  if((analogRead(R_S) > 100)&&(analogRead(L_S) > 100)){
+    myMotors.DeviceDriverSet_Motor_control(false, medium, false, medium, true);
+  }
+
+  //accelerate right
+  else if(analogRead(R_S) < 100){
+    myMotors.DeviceDriverSet_Motor_control(false, high, false, slow, true);
+  }
+
+  //accelerate left
+  else if(analogRead(L_S) < 100){
+    myMotors.DeviceDriverSet_Motor_control(false, slow, false, high, true);
+  }
+}
 
 void turnDegree(bool dir, int degree){ //turn designated number of degrees
 
@@ -202,8 +218,8 @@ void dropItem(){
     delay(15);
   }
 
-  myMotors.DeviceDriverSet_Motor_control(false,100, false, 100, true); //back up
-  turnDegree(true,180);
+//  myMotors.DeviceDriverSet_Motor_control(false,100, false, 100, true); //back up
+//  turnDegree(true,180);
 }
 
 void readEncoder_R() //this function is triggered by the encoder CHANGE, and increments the encoder counter
@@ -464,21 +480,27 @@ void loop(){
         lineTracking(50,70,100); //slow down, we're approaching drop off
 
         if (( lineLimitDropOff>0)){
-            lineTracking(50, 70, 100); //move one more time
             turnDegree(false, 90); //always turn right
             lineTracking(50, 70, 100); //move one more time
-            myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-            delay(1000); // wait to be stable
-            dropItem();
-            robotState = endStop;
         }
-        else{ //special case for item 1
-          lineTracking(50, 70, 100); //move one more time
-          myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-          delay(1000); // wait to be stable
-          dropItem();
-          robotState = endStop;
+//        while(!((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)) //all seeing white
+        for(int i = 0; i < 2; i++) {
+          lineTracking(10, 50, 100); //move until end of white line
+          delay(100);
         }
+ 
+        myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+        delay(1000); // wait to be stable
+        dropItem();
+        
+        while(  !digitalRead(ir_sensor_L) )   {
+          lineTrackingBackward(10, 70, 150);
+        }  
+
+        turnDegree(true, 90); //always turn left
+
+        robotState = endStop;
+        
       }
       else{
         delay(1000);
@@ -487,11 +509,8 @@ void loop(){
       
     case(endStop): // from after dropping off item to end of course
     {
+
       lineTracking(130,150,170);
-      if(digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) //sees intersection
-      {
-        turnDegree(false, 90); //always turn right
-      }
       double ultrasonicVal = getUltrasonic();
       if(ultrasonicVal < 5) //close to wall
         robotState = finished;
