@@ -55,7 +55,7 @@ long Lcounts = 0;
 long encoderVal;
 int turnIRVal_L,turnIRVal_R;
 
-enum {startUp, pickingUp, moving90, moving45, navigateObstacles,droppingOff, endStop, remoteControl };
+enum {startUp, pickingUp, moving90, navigateObstacles,droppingOff, endStop, remoteControl, finished, resetServo};
 unsigned char robotState = startUp;
 
 
@@ -81,47 +81,6 @@ void lineTracking(int slow, int medium, int high){
   }
 
 }
-
-//void turn45(bool dir){ //only ever turns 45 degrees in the left direction, but left for robustness
-//
-//    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-//    delay(500);
-//    myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-//    delay(2250);
-//    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-//
-//
-//}
-
-//void turn90(bool dir){ //UPDATE FOR NO WHITE CHECK
-//
-//    Serial.println("turning 90");
-//    long threshold = 5000;
-//    if(dir) // turn left
-//    {
-//      long start_R = Rcounts;
-//      while(Rcounts - start_R < threshold){
-//        Serial.println(Rcounts);
-//        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-//      }
-//    }
-//    else{ // turn right
-//      long start_L = Lcounts;
-//      while(Lcounts - start_L < threshold){
-//        Serial.println(Lcounts);
-//        myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-//      }
-//    }
-//    
-//    //turn 90 degrees, where dir = true is turn left
-////    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-////    delay(700);
-////    myMotors.DeviceDriverSet_Motor_control(dir, 150, !dir, 150, true);
-////    delay(4500);
-////    myMotors.DeviceDriverSet_Motor_control(true, 150, true, 150, true);
-//    turnCount90++;
-//
-//}
 
 
 void turnDegree(bool dir, int degree){ //turn designated number of degrees
@@ -226,11 +185,9 @@ void grabItem(){
       gripper_servo.write(angle);
       delay(15);
     }
-//    Serial.println(analogRead(pressurePin));
   } 
   delay(2000);
-//
-//
+
   turnDegree(true,180);
 
   lifting_servo.write(45);
@@ -249,15 +206,9 @@ void dropItem(){
     gripper_servo.write(i);
     delay(15);
   }
-  
-}
 
-
-void stopEnd(){ //when blackline gone at the end, stop the robot
-  if((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)){
-    myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-    delay(100000); //long enough to power off manually 
-  }
+  myMotors.DeviceDriverSet_Motor_control(false,100, false, 100, true); //back up
+  turnDegree(true,180);
 }
 
 void readEncoder_R() //this function is triggered by the encoder CHANGE, and increments the encoder counter
@@ -302,56 +253,21 @@ void setup(){
   attachInterrupt(digitalPinToInterrupt(RH_ENCODER_A), readEncoder_R, CHANGE);
   attachInterrupt(digitalPinToInterrupt(LH_ENCODER_A), readEncoder_L, CHANGE);
 
-//  ultrasonic_servo.attach(ultrasonicServoPin);
   slider_servo.attach(servoSlider);
   lifting_servo.attach(servoLift);
   gripper_servo.attach(servoGripper);
   
-  //robotState = startUp;
-//0..  ultrasonicVal = 20.0;
-
+  robotState = startUp;
+  
   gripper_servo.write(180); //fully open
   delay(1000);
 }
 
-//void loop(){
-//      // lineTracking(20, 70, 120); 
-////
-//      //use ultrasonic data to detect if object is not in front of the vehicle;
-////      delay(15);
-////      int ultrasonicValPrev = getUltrasonic();
-////      delay(50);
-//      int ultrasonicVal = getUltrasonic();
-//     
-////      int rateOfChange = ultrasonicValNow - ultrasonicValPrev;
-//      
-//      if(ultrasonicVal > 10) { //actually detecting obstacle and not the wall/something else
-//        //obstacles is moving away, so speed past the object
-//        lineTracking(10, 70, 150);
-////        Serial.println(analogRead(R_S));
-////        Serial.print(" L:");
-////        Serial.println(analogRead(L_S));
-//      }
-//      else {//dynamic obstacle is present. Stop.
-//           myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
-//      }
-//
-//      if(lineDetected == false && digitalRead(ir_sensor_L)) { //detect first intersection, transition to drop off mode
-//        //robotState = droppingOff;
-//        lineCount = 0;
-//      }
-//}
-
-
 //test
 void loop(){
   
-  //ultrasonicVal = getUltrasonic();
   encoderVal = (Rcounts+Lcounts)/2; //encoder value is the average of left and righr encoder
 
-//  int x = analogRead(pressurePin);
-//  int x = digitalRead(pressurePin);
-//  Serial.print(x);
     
 //  IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
 //  if(IRrecv_button > 6) // emergency stop button
@@ -363,19 +279,18 @@ void loop(){
 
   
   IRremote.DeviceDriverSet_IRrecv_Get(&IRrecv_button); 
-  if(IRrecv_button > 6) // emergency stop button
+  if(IRrecv_button == 15) // emergency stop button
   {
-    robotState = remoteControl;
+    robotState = finished;
+  }
+  else if(IRrecv_button > 6 && IRrecv_button < 15)
+  {
+    robotState = resetServo;
   }
   
   switch (robotState){
     case(remoteControl):
-//      turnDegree(true, 90);
-//      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
-//      delay(5000);
-//      turnDegree(true, 180);
-//      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
-//      delay(5000);
+
       robotState = navigateObstacles;
       myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
       delay(1000); // wait to be stable
@@ -467,7 +382,6 @@ void loop(){
               myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
               delay(3000); // wait to be stable
               grabItem();
-              myMotors.DeviceDriverSet_Motor_control(false,80, false, 80, true); //stop
               lineCount = 0;
               turnCount90 = 0;
               lineDetected = false;
@@ -494,41 +408,13 @@ void loop(){
         t_0 = millis();
       }
       break;
-      
-    case(moving45): //from straight path to completing 45 degree turn
-      lineTracking(130, 150, 170);
-//
-//      if((digitalRead(ir_sensor_L)) && (!digitalRead(ir_sensor_R))) {
-//        myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
-//        delay(1000); // wait to be stable
-           Serial.println("About to turn");
-//        turnDegree(true, 45); // navigate turn45 in one go
-////        turn45(true);
-// 
-//      }
-//      else{
-//        delay(200);
-//      }
-//
-//      if(turnCount45 >=2){
-//         robotState = navigateObstacles;
-//      }
-      
-      break;
-      
     case(navigateObstacles): //for bumpy road and dynamic obstacle
     {
         
-      
-//      lineTracking(5, 70, 100); 
-//
       //use ultrasonic data to detect if object is not in front of the vehicle;
-//      delay(15);
-//      int ultrasonicValPrev = getUltrasonic();
-//      delay(50);
       double ultrasonicVal = getUltrasonic();
      
-//      int rateOfChange = ultrasonicValNow - ultrasonicValPrev;
+
       
       if(ultrasonicVal > 10) { //actually detecting obstacle and not the wall/something else
         //obstacles is moving away, so speed past the object
@@ -575,14 +461,16 @@ void loop(){
         lineTracking(50,70,100); //slow down, we're approaching drop off
 
         if (( lineLimitDropOff>0)){
-            lineTracking(50, 70, 100);
+            lineTracking(50, 70, 100); //move one more time
             turnDegree(false, 90); //always turn right
+            lineTracking(50, 70, 100); //move one more time
             myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
             delay(1000); // wait to be stable
             dropItem();
             robotState = endStop;
         }
         else{ //special case for item 1
+          lineTracking(50, 70, 100); //move one more time
           myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
           delay(1000); // wait to be stable
           dropItem();
@@ -594,12 +482,60 @@ void loop(){
       }
       break;
       
-    case(endStop):
-//      lineTracking(130,150,170);
-//      stopEnd();
+    case(endStop): // from after dropping off item to end of course
+    {
+      lineTracking(130,150,170);
+      if(digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) //sees intersection
+      {
+        turnDegree(false, 90); //always turn right
+      }
+      double ultrasonicVal = getUltrasonic();
+      if(ultrasonicVal < 5) //close to wall
+        robotState = finished;
+      
       break;
+    }
+    case(finished): //completed state
+      myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+      break;
+    case(resetServo):
+      slider_servo.write(0); //drive mechanism back
+      delay(2500);
+      slider_servo.write(90); //rest
+      delay(1000);
+      
+      gripper_servo.write(180); //fully open
+      delay(500);
+      
+      lifting_servo.write(180); //drive mechanism up
+      delay(3000);
+      lifting_servo.write(90); //rest
+      delay(1000);
+
     default:
       break;  
-    }   
+  }   
 
 }
+
+//      
+//    case(moving45): //from straight path to completing 45 degree turn
+//      lineTracking(130, 150, 170);
+////
+////      if((digitalRead(ir_sensor_L)) && (!digitalRead(ir_sensor_R))) {
+////        myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
+////        delay(1000); // wait to be stable
+//           Serial.println("About to turn");
+////        turnDegree(true, 45); // navigate turn45 in one go
+//////        turn45(true);
+//// 
+////      }
+////      else{
+////        delay(200);
+////      }
+////
+////      if(turnCount45 >=2){
+////         robotState = navigateObstacles;
+////      }
+//      
+//      break;
