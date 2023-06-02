@@ -443,10 +443,12 @@ void loop(){
            myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true);
       }
 
-      if((millis() - t_0 > 60000) && digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) { //detect first intersection, transition to drop off mode
+      if((millis() - t_0 > 1000) && digitalRead(ir_sensor_L) && digitalRead(ir_sensor_R)) { //detect first intersection, transition to drop off mode
+        Serial.println("Detected drop off mode");
         robotState = droppingOff;
         lineCount = 0;
         if (itemNum == 1){ // item 1 is the special case, can go straight up to dropping point without turning
+          Serial.println("Special case 1 mode");
           lineTracking(130,150,170);
           delay(500);
         }
@@ -457,21 +459,24 @@ void loop(){
           lineTracking(130,150,170);
         }
       }
-      
+      Serial.println("Breaking");
+  
       break;
-    }
+  }
     case(droppingOff): 
-
     
+      Serial.println("Entering drop off mode");
       lineTracking(130, 150, 170);
       
       if((lineDetected == false) && (digitalRead(ir_sensor_R))&& (lineCount < lineLimitDropOff)) //detect first intersection
       {
+        Serial.println("First intersection detected");
         lineCount++;
         lineDetected = true;
       }
       else if ((lineDetected == true) && (!digitalRead(ir_sensor_R)) && (lineCount < lineLimitDropOff)) //no longer seeing intersections
       {
+        Serial.println("no longer intersection detected");
         lineDetected = false;
       }
 
@@ -480,30 +485,34 @@ void loop(){
         lineTracking(50,70,100); //slow down, we're approaching drop off
 
         if (( lineLimitDropOff>0)){
+            Serial.println("limit drop off reach");
             turnDegree(false, 90); //always turn right
-            lineTracking(50, 70, 100); //move one more time
+            //lineTracking(50, 70, 100); //move one more time
         }
 //        while(!((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)) //all seeing white
-        for(int i = 0; i < 2; i++) {
+        for(int i = 0; i < 10; i++) {
           lineTracking(10, 50, 100); //move until end of white line
-          delay(100);
+          Serial.println("delay line tracking in the for loop");
+          delay(1000);
         }
- 
+        Serial.println("ready to dropoff");
         myMotors.DeviceDriverSet_Motor_control(3, 0, 3, 0, true); //stop
         delay(1000); // wait to be stable
         dropItem();
-        
+        Serial.println("drop off done");
         while(  !digitalRead(ir_sensor_L) )   {
+          Serial.println("back up");
           lineTrackingBackward(10, 70, 150);
         }  
-
+        Serial.println("ready to turn left");
         turnDegree(true, 90); //always turn left
-
+        Serial.println("ready to end stop");
         robotState = endStop;
         
       }
       else{
         delay(1000);
+        Serial.println("delay1000?");
       }
       break;
       
