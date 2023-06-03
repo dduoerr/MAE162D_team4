@@ -189,7 +189,8 @@ void grabItem(){
   
   // progressively close
   for (int angle = 180; angle >= 0; angle--){
-    if(analogRead(pressurePin) > 1000){
+//    if(analogRead(pressurePin) > 1000){
+    if(angle < 90){
       break;
     }
     else{
@@ -225,7 +226,7 @@ void grabItem(){
   
   Serial.println("Lowering lift");
   lifting_servo.write(80);
-  delay(1000);
+  delay(1500);
   lifting_servo.write(90);
   
   haveItem = true;
@@ -235,7 +236,8 @@ void dropItem(){
   delay(8000);
   lifting_servo.write(90); //rest
   delay(1000);
-  for(int i = gripper_servo.read(); i < 180; i++)
+//  for(int i = gripper_servo.read(); i < 180; i++)
+  for(int i = 90; i < 180; i++)
   {
     gripper_servo.write(i);
     delay(15);
@@ -554,7 +556,7 @@ void loop(){
             //lineTracking(50, 70, 100); //move one more time
         }
 //        while(!((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)) //all seeing white
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 9; i++) {
           lineTracking(10, 50, 100); //move until end of white line
           Serial.println("delay line tracking in the for loop");
           delay(1000);
@@ -583,9 +585,9 @@ void loop(){
     case(endStop): // from after dropping off item to end of course
     {
 
-      lineTracking(170,220,250);
+      lineTracking(100,220,250);
       double ultrasonicVal = getUltrasonic();
-      if(ultrasonicVal < 5) //close to wall
+      if(ultrasonicVal < 9) //close to wall
         robotState = finished;
       
       break;
