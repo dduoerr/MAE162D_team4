@@ -206,7 +206,7 @@ void grabItem(){
   double ultrasonicVal = getUltrasonic();
   for(int i = 0; i < 1000; i++) {
     ultrasonicVal = getUltrasonic();
-    if(ultrasonicVal < 5.5)   {
+    if(ultrasonicVal < 5)   {
       lineTrackingBackward(40, 70, 100);
       Serial.print("backing up: ultrasonic value is: ");
       Serial.println(ultrasonicVal);
@@ -225,8 +225,8 @@ void grabItem(){
   delay(500);
   
   Serial.println("Lowering lift");
-  lifting_servo.write(80);
-  delay(1500);
+  lifting_servo.write(65);
+  delay(2500);
   lifting_servo.write(90);
   
   haveItem = true;
@@ -499,7 +499,7 @@ void loop(){
      
 
       
-      if(ultrasonicVal > 10) { //actually detecting obstacle and not the wall/something else
+      if(ultrasonicVal > 14) { //actually detecting obstacle and not the wall/something else
         //obstacles is moving away, so speed past the object
         lineTracking(10, 200, 200); //med was 70
       }
@@ -517,11 +517,13 @@ void loop(){
           delay(500);
         }
         else{
-          lineTracking(130,150,170);
-          delay(200);
+          for(int i = 0; i < 12; i++) {
+            lineTracking(30, 70, 150);
+            delay(100);
+          }
           turnDegree(true, 90); //turn left
-          delay(300);
-          lineTracking(130,150,170);
+//          delay(300);
+//          lineTracking(130,150,170);
         }
       }
       Serial.println("Breaking");
@@ -531,7 +533,7 @@ void loop(){
     case(droppingOff): 
     
       Serial.println("Entering drop off mode");
-      lineTracking(130, 150, 170);
+      lineTracking(100,150,200);
       
       if((lineDetected == false) && (digitalRead(ir_sensor_R))&& (lineCount < lineLimitDropOff)) //detect first intersection
       {
@@ -550,14 +552,15 @@ void loop(){
         lineTracking(50,70,100); //slow down, we're approaching drop off
 
         if (( lineLimitDropOff>0)){
-           lineTracking(50,70,100); //slow down, we're approaching drop off
+//           lineTracking(50,70,100); //slow down, we're approaching drop off
+            delay(500);
             Serial.println("limit drop off reach");
             turnDegree(false, 90); //always turn right
             //lineTracking(50, 70, 100); //move one more time
         }
 //        while(!((analogRead(M_S) < 100)&&(analogRead(R_S) < 100)&&(analogRead(L_S) < 100)) //all seeing white
-        for(int i = 0; i < 9; i++) {
-          lineTracking(10, 50, 100); //move until end of white line
+        for(int i = 0; i < 6; i++) {
+          lineTracking(10, 45, 100); //move until end of white line
           Serial.println("delay line tracking in the for loop");
           delay(1000);
         }
@@ -577,8 +580,7 @@ void loop(){
         
       }
       else{
-        delay(1000);
-        Serial.println("delay1000?");
+        delay(700);
       }
       break;
       
