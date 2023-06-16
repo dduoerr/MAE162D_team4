@@ -16,7 +16,7 @@ void loop() {
      Serial.println("Object not detected"); // display on Serial when object not detected 
     }
 
-//  Serial.println(analogRead(ir_sensor_pin)); 
+    //Serial.println(analogRead(ir_sensor_pin)); 
 //  Serial.println(digitalRead(ir_sensor_pin));
 //  delay(1000);
 }

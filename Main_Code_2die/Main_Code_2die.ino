@@ -347,25 +347,25 @@ void loop(){
             break;
           case 2:
             //itemNum = 2;
-            lineLimitPickup = 2;
-            turn1dir = true;
+            lineLimitPickup = 1;
+            turn1dir = false;
             break;
           case 3:
             //itemNum = 3;
-            lineLimitPickup = 3;
+            lineLimitPickup = 2;
             turn1dir = true;
   
             break;
           case 4:
             //itemNum = 4;
-            lineLimitPickup = 1;
+            lineLimitPickup = 2;
             turn1dir = false;
   
             break;
           case 5:
             //itemNum = 5;
-            lineLimitPickup = 2;
-            turn1dir = false;
+            lineLimitPickup = 3;
+            turn1dir = true;
   
             break;
           case 6:
